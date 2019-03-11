@@ -1,4 +1,4 @@
-# rigid bodys generator（剛体ツール）
+# rigid bodies generator（剛体ツール）
 Add Rigid bones and Joints on selected bones easily.  
 選択したボーンに沿ってRigid Body（剛体）とRigid Body Constraints（ジョイント）を作成します。
 
