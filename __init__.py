@@ -344,11 +344,10 @@ class UProp:
         subtype = 'NONE',
         min = 0,
         max = 1)
-        
     
-    jo_constraint_object = BoolProperty(
-        name='Auto Constraint Object',
-        description='Constraint Object',
+    jo_align_bone = BoolProperty(
+        name='Align Joint To Bone',
+        description='Set same rotation of bone to joint object',
         default=True)
 
     rc_rootbody_passive = BoolProperty(
@@ -457,7 +456,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
 
             ### Set up Track Constraints
             bpy.ops.object.constraint_add(type='DAMPED_TRACK')
-            dt = bpy.context.object.constraints["Damped Track"]
+            dt = bpy.context.object.constraints[-1]
             dt.target = ob
             dt.subtarget = selected_bone.name
             dt.head_tail = 1
@@ -592,7 +591,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
 
             ### Set Damped Track Constraint
             bpy.ops.object.constraint_add(type='DAMPED_TRACK')
-            con = bpy.context.object.constraints["Damped Track"]
+            con = bpy.context.object.constraints[-1]
             con.target = ob
             con.subtarget = selected_bone.name
             con.head_tail = 1
@@ -636,7 +635,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
 
             ### Set Copy Transform Constraint
             bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
-            con = bpy.context.object.constraints["Copy Transforms"]
+            con = bpy.context.object.constraints[-1]
             con.target = ob
             con.subtarget = selected_bone.name
             
@@ -658,10 +657,12 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             con.name = 'Copy Transforms Of ' + tr.name
             con.target = tr
 
+            tr.hide = True
+
             ###bone's use_connect turn to false
             bpy.ops.object.mode_set(mode='EDIT')
             bpy.context.active_bone.use_connect = False
-            
+        
         ###clear object select
         bpy.context.scene.objects.active = ob
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -680,11 +681,12 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
     bl_description = "add Add Joints on bones"
     bl_options = {'REGISTER', 'UNDO'}
 
-    init_joint_size = 0.16
+    init_joint_size = 0.33
 
     ###instance UProp.joint
     joint_type = UProp.jo_type
     joint_size = UProp.jo_size
+    joint_align_bone = UProp.jo_align_bone
     joint_Axis_limit_x = UProp.jo_limit_lin_x
     joint_Axis_limit_y = UProp.jo_limit_lin_y
     joint_Axis_limit_z = UProp.jo_limit_lin_z
@@ -734,7 +736,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
         box = layout.box()
         box.prop(self, 'joint_type')
         box.prop(self, 'joint_size')
-
+        box.prop(self, 'joint_align_bone')
 
         col = box.column(align=True)
         col.label("Limits:")
@@ -827,11 +829,21 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Empty Sphere
-            bpy.ops.object.empty_add(type='SPHERE', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
+            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
             bpy.context.object.layers[acrive_layer] = True
             bpy.context.object.layers[19] = False
-            rc = bpy.context.active_object
-            bpy.context.object.name = "joint." + selected_bone.name
+            jc = bpy.context.active_object
+            jc.name = "joint." + ob.name + "." + selected_bone.name
+            
+            if self.joint_align_bone:
+                bpy.ops.object.constraint_add(type='COPY_ROTATION')
+                con = bpy.context.object.constraints[-1]
+                con.target = ob
+                con.subtarget = selected_bone.name
+                
+                ### Apply Transform
+                bpy.ops.object.visual_transform_apply()
+                jc.constraints.remove(con)
             
             ### Rigid Body Dimensions
             bpy.context.object.empty_draw_size = selected_bone.length * self.init_joint_size * self.joint_size
@@ -913,12 +925,13 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
     p_rb_add_pole_rootbody = UProp.rc_add_pole_rootbody
     p_rb_pole_rootbody_dim = UProp.rc_pole_rootbody_dim
 
-    init_joint_size = 0.16
+    init_joint_size = 0.33
     init_polerb_size = 0.33
 
     ###instance UProp.joint
     joint_type = UProp.jo_type
     joint_size = UProp.jo_size
+    joint_align_bone = UProp.jo_align_bone
     joint_Axis_limit_x = UProp.jo_limit_lin_x
     joint_Axis_limit_y = UProp.jo_limit_lin_y
     joint_Axis_limit_z = UProp.jo_limit_lin_z
@@ -946,7 +959,6 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
     joint_spring_damping_x = UProp.jo_spring_damping_x
     joint_spring_damping_y = UProp.jo_spring_damping_y
     joint_spring_damping_z = UProp.jo_spring_damping_z
-    joint_constraint_object = UProp.jo_constraint_object
 
 
     def __init__(self):
@@ -981,7 +993,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
         box = layout.box()
         box.prop(self, 'joint_type')
         box.prop(self, 'joint_size')
-        box.prop(self, 'joint_constraint_object')
+        box.prop(self, 'joint_align_bone')
         box.prop(self, 'p_rb_add_pole_rootbody')
 
         col = box.column(align=True)
@@ -1088,16 +1100,26 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ###Joint Session
             ###Create Joint Empty
-            bpy.ops.object.empty_add(type='SPHERE', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
+            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
             bpy.context.object.layers[acrive_layer] = True
             bpy.context.object.layers[19] = False
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             
+            if self.joint_align_bone:
+                bpy.ops.object.constraint_add(type='COPY_ROTATION')
+                con = bpy.context.object.constraints[-1]
+                con.target = ob
+                con.subtarget = selected_bone.name
+                
+                ### Apply Transform
+                bpy.ops.object.visual_transform_apply()
+                jc.constraints.remove(con)
+
             ### Set Joint radius
             bpy.context.object.empty_draw_size = selected_bone.length * self.init_joint_size * self.joint_size
             
-            ### Set Rigid Body
+            ### Set Rigid Body Constraint
             bpy.ops.rigidbody.constraint_add()
             jc.rigid_body_constraint.type = self.joint_type
             jc.rigid_body_constraint.use_breaking = False
@@ -1225,15 +1247,15 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             if len(selected_bone.children_recursive) == 0:
                 parent_bones_ob = ""
 
-            ###Material set
+            ### Aligh to Bone by Dumped Track
             bpy.ops.object.constraint_add(type='DAMPED_TRACK')
-            con = bpy.context.object.constraints["Damped Track"]
+            con = bpy.context.object.constraints[-1]
             con.target = ob
             con.subtarget = selected_bone.name
             con.head_tail = 1
             con.track_axis = 'TRACK_Z'
             
-            ### Apply Tranceform
+            ### Apply Transform
             bpy.ops.object.visual_transform_apply()
             rc.constraints.remove(con)
             
@@ -1269,7 +1291,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ### Set Copy Transform Constraint
             bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
-            con = bpy.context.object.constraints["Copy Transforms"]
+            con = bpy.context.object.constraints[-1]
             con.target = ob
             con.subtarget = selected_bone.name
             
@@ -1297,6 +1319,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.context.scene.update()
+            tr.hide = True
 
         ###clear object select
         bpy.context.scene.objects.active = ob
