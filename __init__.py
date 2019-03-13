@@ -834,6 +834,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             bpy.context.object.layers[19] = False
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
+            jc.show_x_ray = True
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
@@ -1105,6 +1106,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.context.object.layers[19] = False
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
+            jc.show_x_ray = True
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
