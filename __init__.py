@@ -450,6 +450,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             bpy.context.object.layers[19] = False
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
+            rc.rotation_mode = 'QUATERNION'
             rc.show_x_ray = True
             rc.draw_type = 'BOUNDS'
             rc.hide_render = True
@@ -585,6 +586,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             bpy.context.object.layers[19] = False
             rc = bpy.context.active_object
             bpy.context.object.name = "rb." + ob.name + '.' + selected_bone.name
+            rc.rotation_mode = 'QUATERNION'
             rc.show_x_ray = True
             rc.draw_type = 'BOUNDS'
             rc.hide_render = True
@@ -632,6 +634,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             tr = bpy.context.active_object
             bpy.context.object.name = "tr." + selected_bone.name
             bpy.context.object.empty_draw_size = selected_bone.length * self.tr_size
+            tr.rotation_mode = 'QUATERNION'
 
             ### Set Copy Transform Constraint
             bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
@@ -835,6 +838,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_x_ray = True
+            jc.rotation_mode = 'QUATERNION'
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
@@ -1107,6 +1111,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_x_ray = True
+            jc.rotation_mode = 'QUATERNION'
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
@@ -1168,6 +1173,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 bpy.context.object.layers[19] = False
                 rc2 = bpy.context.active_object
                 rc2.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
+                rc2.rotation_mode = 'QUATERNION'
                 rc2.show_x_ray = True
                 rc2.hide_render = True
                 rc2.draw_type = 'BOUNDS'
@@ -1237,6 +1243,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.context.object.layers[19] = False
             rc = bpy.context.active_object
             bpy.context.object.name = parent_bones_ob
+            rc.rotation_mode = 'QUATERNION'
             rc.show_x_ray = True
             rc.draw_type = 'BOUNDS'
             rc.hide_render = True
@@ -1290,6 +1297,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             tr = bpy.context.active_object
             bpy.context.object.name = "tr." + selected_bone.name
             bpy.context.object.empty_draw_size = selected_bone.length * self.tr_size
+            tr.rotation_mode = 'QUATERNION'
 
             ### Set Copy Transform Constraint
             bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
