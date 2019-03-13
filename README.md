@@ -3,7 +3,7 @@ Add Rigid bones and Joints on selected bones easily.
 選択したボーンに沿ってRigid Body（剛体）とRigid Body Constraints（ジョイント）を作成します。
 
 ## Requirements（使用条件）
-* Blender 2.74+
+* Blender 2.79+ / 2.80
 
 ## Functions（機能）
 * Add Passive(on bones)  
@@ -32,9 +32,6 @@ OFF to Active type.
 * [animated]  
 ON to transform with armature.  
 アーマチュアの変形にPASSIVEを追従させるにはONに
-* [Parent to armature]  
-ON to parent of armature.   
-剛体やジョイントオブジェクトをアーマチュアの子に設定します。
 * [Auto Constraint Object]  
 Not in service.  
 動作しません。（現在未実装）
@@ -48,8 +45,8 @@ Add "PASSIVE" rigid bones to root bone's parent in automatic.
 実行前にタイムラインは先頭に戻してから実行してください。
 * Reset pose before you execute.
 アーマチュアのポーズは変形前に戻してから実行してください。
-* Armature's origin moves zero after you execute.
-機能の都合上、実行後のアーマチュアの原点が(0, 0, 0)位置になります。
+* Reset Armature's position to origin before you execute.
+アーマチュアを原点(0, 0, 0)に置いて実行してください
 
 ## Licenses（ライセンス）
 [MIT licenses](https://opensource.org/licenses/mit-license.php)
