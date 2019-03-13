@@ -435,7 +435,6 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
                 
         ###selected Armature
         ob = bpy.context.active_object
-        acrive_layer = bpy.context.scene.active_layer
         #self.report({'INFO'}, ob.data)
 
         if len(bpy.context.selected_pose_bones) == 0:
@@ -445,9 +444,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Rigidbody Cube
-            bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.center, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
+            bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
             rc.rotation_mode = 'QUATERNION'
@@ -573,7 +570,6 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
         
         ###selected Armature
         ob = bpy.context.active_object
-        acrive_layer = bpy.context.scene.active_layer
         #self.report({'INFO'}, ob.data)
 
         for selected_bone in bpy.context.selected_pose_bones:
@@ -581,9 +577,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
 
             ###Create Rigidbody Cube
             bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.center, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
+            bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             bpy.context.object.name = "rb." + ob.name + '.' + selected_bone.name
             rc.rotation_mode = 'QUATERNION'
@@ -627,10 +621,8 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             bpy.context.object.rigid_body.angular_damping = self.p_rb_rotation
 
             ## Make Track offset point
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
+            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
             bpy.context.object.parent = rc
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
             tr = bpy.context.active_object
             bpy.context.object.name = "tr." + selected_bone.name
             bpy.context.object.empty_draw_size = selected_bone.length * self.tr_size
@@ -821,7 +813,6 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
         
         ###selected Armature
         ob = bpy.context.active_object
-        acrive_layer = bpy.context.scene.active_layer
         #self.report({'INFO'}, ob.data)
         spb = bpy.context.selected_pose_bones
 
@@ -832,9 +823,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Empty Sphere
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
+            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_x_ray = True
@@ -1080,8 +1069,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
         
         ###selected Armature
         ob = bpy.context.active_object
-        acrive_layer = bpy.context.scene.active_layer
-        self.report({'INFO'}, "ob:" + str(ob))
+        #self.report({'INFO'}, "ob:" + str(ob))
 
         spb = bpy.context.selected_pose_bones
 
@@ -1105,9 +1093,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ###Joint Session
             ###Create Joint Empty
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
+            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_x_ray = True
@@ -1168,9 +1154,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             if selected_bone.parent is not None and selected_bone.parent not in spb and selected_bone.parent not in pole_dict and self.p_rb_add_pole_rootbody == True:
 
                 ###Create Rigidbody Cube
-                bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.parent.center, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
-                bpy.context.object.layers[acrive_layer] = True
-                bpy.context.object.layers[19] = False
+                bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.parent.center)
                 rc2 = bpy.context.active_object
                 rc2.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
                 rc2.rotation_mode = 'QUATERNION'
@@ -1238,9 +1222,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ###Rigid Body Session
             ###Create Rigidbody Cube
-            bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.center, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
+            bpy.ops.mesh.primitive_cube_add(radius=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             bpy.context.object.name = parent_bones_ob
             rc.rotation_mode = 'QUATERNION'
@@ -1290,10 +1272,8 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.context.object.rigid_body.angular_damping = self.p_rb_rotation
 
             ## Make Track offset point
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head, layers=(False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, False, True))
+            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
             bpy.context.object.parent = rc
-            bpy.context.object.layers[acrive_layer] = True
-            bpy.context.object.layers[19] = False
             tr = bpy.context.active_object
             bpy.context.object.name = "tr." + selected_bone.name
             bpy.context.object.empty_draw_size = selected_bone.length * self.tr_size
