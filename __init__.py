@@ -428,7 +428,6 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
-            #bpy.context.scene.rigidbody_world.collection.objects.link(rc)
             rc.show_in_front = True
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
@@ -561,7 +560,6 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
-            #bpy.context.scene.rigidbody_world.collection.objects.link(rc)
             rc.show_in_front = True
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
@@ -806,8 +804,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             ###Create Empty Sphere
             bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
             jc = bpy.context.active_object
-            jc.name = "joint." + selected_bone.name
-            #bpy.context.scene.rigidbody_world.constraints.objects.link(jc)
+            jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_in_front = True
             
             if self.joint_align_bone:
@@ -1078,7 +1075,6 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_in_front = True
-            #bpy.context.scene.rigidbody_world.constraints.objects.link(jc)
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
@@ -1137,7 +1133,6 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 ###Create Rigidbody Cube
                 bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.parent.center)
                 rc2 = bpy.context.active_object
-                #bpy.context.scene.rigidbody_world.collection.objects.link(rc2)
                 rc2.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
                 rc2.show_in_front = True
                 rc2.display.show_shadows = False
@@ -1206,7 +1201,6 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             ###Create Rigidbody Cube
             bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
-            #bpy.context.scene.rigidbody_world.collection.objects.link(rc)
             rc.name = parent_bones_ob
             rc.show_in_front = True
             rc.display.show_shadows = False
@@ -1258,7 +1252,6 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
             bpy.context.object.parent = rc
             tr = bpy.context.active_object
-            #bpy.context.scene.rigidbody_world.constraints.objects.link(tr)
             tr.name = "tr." + selected_bone.name
             tr.empty_display_size = selected_bone.length * self.tr_size
 
