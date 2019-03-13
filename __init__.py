@@ -428,6 +428,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
+            rc.rotation_mode = 'QUATERNION'
             rc.show_in_front = True
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
@@ -560,6 +561,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
+            rc.rotation_mode = 'QUATERNION'
             rc.show_in_front = True
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
@@ -606,6 +608,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             tr = bpy.context.active_object
             bpy.context.object.name = "tr." + selected_bone.name
             bpy.context.object.empty_display_size = selected_bone.length * self.tr_size
+            tr.rotation_mode = 'QUATERNION'
 
             ### Set Copy Transform Constraint
             bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
@@ -806,6 +809,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_in_front = True
+            jc.rotation_mode = 'QUATERNION'
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
@@ -1075,6 +1079,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_in_front = True
+            jc.rotation_mode = 'QUATERNION'
             
             if self.joint_align_bone:
                 bpy.ops.object.constraint_add(type='COPY_ROTATION')
@@ -1134,6 +1139,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.parent.center)
                 rc2 = bpy.context.active_object
                 rc2.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
+                rc2.rotation_mode = 'QUATERNION'
                 rc2.show_in_front = True
                 rc2.display.show_shadows = False
                 rc2.hide_render = True
@@ -1202,6 +1208,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = parent_bones_ob
+            rc.rotation_mode = 'QUATERNION'
             rc.show_in_front = True
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
@@ -1254,6 +1261,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             tr = bpy.context.active_object
             tr.name = "tr." + selected_bone.name
             tr.empty_display_size = selected_bone.length * self.tr_size
+            tr.rotation_mode = 'QUATERNION'
 
             ### Set Copy Transform Constraint
             bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
