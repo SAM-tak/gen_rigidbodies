@@ -1,9 +1,9 @@
-# rigid bodies generator（剛体ツール）
+# Rigid Bodies Generator（剛体ツール）
 Add Rigid bones and Joints on selected bones easily.  
 選択したボーンに沿ってRigid Body（剛体）とRigid Body Constraints（ジョイント）を作成します。
 
 ## Requirements（使用条件）
-* Blender 2.79+ / 2.80
+* Blender 2.79 / 2.80
 
 ## Functions（機能）
 * Add Passive(on bones)  
