@@ -76,7 +76,7 @@ class GenRigidBodyToolsPanel(bpy.types.Panel):
 
 ### add MainMenu
 class MenuRigidBodies(bpy.types.Menu):
-    bl_idname = "menu.genrigidbodies"
+    bl_idname = "POSE_MT_genrigidbodies"
     bl_label = "Make Rigid Bodies"
     bl_description = "make rigibodies & constraint"
 
@@ -483,7 +483,8 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             #self.report({'INFO'}, str(sub_target))
             CoC.inverse_matrix = sub_target.matrix.inverted()   
             rc.update_tag(refresh={'OBJECT'})
-            bpy.context.scene.update()
+            dg = bpy.context.evaluated_depsgraph_get()
+            dg.update()
 
         ###clear object select
         bpy.context.view_layer.objects.active = ob
@@ -558,7 +559,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
 
             ###Create Rigidbody Cube
             bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
             rc.rotation_mode = 'QUATERNION'
@@ -805,7 +806,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Empty Sphere
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
+            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_in_front = True
@@ -1051,7 +1052,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
         
         ###selected Armature
         ob = bpy.context.active_object
-        self.report({'INFO'}, "ob:" + str(ob))
+        #self.report({'INFO'}, "ob:" + str(ob))
 
         spb = bpy.context.selected_pose_bones
 
@@ -1075,7 +1076,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ###Joint Session
             ###Create Joint Empty
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
+            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
             jc = bpy.context.active_object
             jc.name = "joint." + ob.name + "." + selected_bone.name
             jc.show_in_front = True
@@ -1136,7 +1137,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             if selected_bone.parent is not None and selected_bone.parent not in spb and selected_bone.parent not in pole_dict and self.p_rb_add_pole_rootbody == True:
 
                 ###Create Rigidbody Cube
-                bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.parent.center)
+                bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.parent.center)
                 rc2 = bpy.context.active_object
                 rc2.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
                 rc2.rotation_mode = 'QUATERNION'
@@ -1177,9 +1178,11 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 #without ops way to childof_set_inverse
                 sub_target = bpy.data.objects[ob.name].pose.bones[selected_bone.parent.name]
                 #self.report({'INFO'}, str(sub_target))
-                CoC2.inverse_matrix = sub_target.matrix.inverted()   
+                CoC2.inverse_matrix = sub_target.matrix.inverted()
+                # unnecessary?
                 rc2.update_tag(refresh={'OBJECT'})
-                bpy.context.scene.update()
+                dg = bpy.context.evaluated_depsgraph_get()
+                dg.update()
 
             ###constraint.object1
             
@@ -1205,7 +1208,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ###Rigid Body Session
             ###Create Rigidbody Cube
-            bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = parent_bones_ob
             rc.rotation_mode = 'QUATERNION'
@@ -1256,7 +1259,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.context.object.rigid_body.angular_damping = self.p_rb_rotation
 
             ## Make Track offset point
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
+            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
             bpy.context.object.parent = rc
             tr = bpy.context.active_object
             tr.name = "tr." + selected_bone.name
@@ -1292,7 +1295,8 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.context.active_bone.use_connect = False
 
             bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.context.scene.update()
+            dg = bpy.context.evaluated_depsgraph_get()
+            dg.update()
             tr.hide_viewport = True
 
         ###clear object select
