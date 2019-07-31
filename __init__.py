@@ -90,7 +90,6 @@ class MenuRigidBodies(bpy.types.Menu):
 
 ### user prop
 class UProp:
-    
     rb_shape = EnumProperty(
         name='Shape',
         description='Choose Rigid Body Shape',
@@ -379,19 +378,14 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
     p_rb_rootbody_passive : UProp.rc_rootbody_passive
     p_rb_rootbody_animated : UProp.rc_rootbody_animated
 
-
     def __init__(self):
-        
         self.p_rb_dim = (1, 1, 1)
 
-
     def draw(self, context):
-
         #if len(bpy.context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
         #    return {'FINISHED'}
-                        
 
         layout = self.layout
 
@@ -413,7 +407,6 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
 
     ### 
     def execute(self, context):
-                
         ###selected Armature
         ob = bpy.context.active_object
         #self.report({'INFO'}, ob.data)
@@ -425,7 +418,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Rigidbody Cube
-            bpy.ops.mesh.primitive_cube_add(size=1, view_align=False, enter_editmode=False, location=selected_bone.center)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
             rc = bpy.context.active_object
             rc.name = "rb." + ob.name + '.' + selected_bone.name
             rc.rotation_mode = 'QUATERNION'
@@ -433,6 +426,8 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
             rc.hide_render = True
+            rc.show_bounds = True
+            rc.display_bounds_type = self.p_rb_shape
 
             ### Set up Track Constraints
             bpy.ops.object.constraint_add(type='DAMPED_TRACK')
@@ -473,7 +468,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             bpy.context.object.rigid_body.angular_damping = self.p_rb_rotation
 
             ### Child OF
-            CoC = rc.constraints.new("CHILD_OF")
+            CoC = rc.constraints.new('CHILD_OF')
             CoC.name = 'Child_Of_' + selected_bone.name
             CoC.target = ob
             CoC.subtarget = selected_bone.name
@@ -483,8 +478,7 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
             #self.report({'INFO'}, str(sub_target))
             CoC.inverse_matrix = sub_target.matrix.inverted()   
             rc.update_tag(refresh={'OBJECT'})
-            dg = bpy.context.evaluated_depsgraph_get()
-            dg.update()
+            bpy.context.view_layer.update()
 
         ###clear object select
         bpy.context.view_layer.objects.active = ob
@@ -498,7 +492,6 @@ class CreateRigidBodiesOnBones(bpy.types.Operator):
 
 #
 class CreateRigidBodiesPhysics(bpy.types.Operator):
-
     bl_idname = "genrigidbodies.physics"
     bl_label = "Add Active"
     bl_description = "make physics engine on rigibodies"
@@ -519,12 +512,11 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
     p_rb_rootbody_animated : UProp.rc_rootbody_animated
 
     def __init__(self):
-        
         self.p_rb_dim = (1, 1, 1)
         self.tr_size = 0.33
 
-    def draw(self, context):
 
+    def draw(self, context):
         #if len(bpy.context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
@@ -547,9 +539,9 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
         #box.prop(self, 'p_rb_rootbody_passive')
         box.prop(self, 'p_rb_rootbody_animated')
 
+
     ### 
     def execute(self, context):
-        
         ###selected Armature
         ob = bpy.context.active_object
         #self.report({'INFO'}, ob.data)
@@ -567,6 +559,8 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
             rc.hide_render = True
+            rc.show_bounds = True
+            rc.display_bounds_type = self.p_rb_shape
 
             ### Set Damped Track Constraint
             bpy.ops.object.constraint_add(type='DAMPED_TRACK')
@@ -604,22 +598,16 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             bpy.context.object.rigid_body.angular_damping = self.p_rb_rotation
 
             ## Make Track offset point
-            bpy.ops.object.empty_add(type='ARROWS', view_align=False, location=selected_bone.head)
-            bpy.context.object.parent = rc
+            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
             tr = bpy.context.active_object
-            bpy.context.object.name = "tr." + selected_bone.name
-            bpy.context.object.empty_display_size = selected_bone.length * self.tr_size
+            tr.name = "tr." + selected_bone.name
+            tr.empty_display_size = selected_bone.length * self.tr_size
             tr.rotation_mode = 'QUATERNION'
 
-            ### Set Copy Transform Constraint
-            bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
-            con = bpy.context.object.constraints[-1]
-            con.target = ob
-            con.subtarget = selected_bone.name
-            
-            ### Apply Transform
-            bpy.ops.object.visual_transform_apply()
-            bpy.context.object.constraints.remove(con)
+            ### Align track object to bone
+            align_obj_to_bone(tr, ob, selected_bone.name)
+            tr.parent = rc
+            tr.matrix_parent_inverse = rc.matrix_world.inverted()
 
             ### Set Copy Transform Constraint To Bone
             bpy.context.view_layer.objects.active = ob
@@ -630,7 +618,7 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
             ab = bpy.context.active_pose_bone
 
             #self.report({'INFO'}, str(rc.name))
-            con = ab.constraints.new("COPY_TRANSFORMS")
+            con = ab.constraints.new('COPY_TRANSFORMS')
             #self.report({'INFO'}, "info:" + str(CoC))
             con.name = 'Copy Transforms Of ' + tr.name
             con.target = tr
@@ -653,7 +641,6 @@ class CreateRigidBodiesPhysics(bpy.types.Operator):
     
 #
 class CreateRigidBodiesJoints(bpy.types.Operator):
-
     bl_idname = "genrigidbodies.joints"
     bl_label = "Add Joints"
     bl_description = "add Add Joints on bones"
@@ -694,12 +681,10 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
     joint_spring_damping_z : UProp.jo_spring_damping_z
 
     def __init__(self):
-
         self.joint_size = 1
 
 
     def draw(self, context):
-
         #if len(bpy.context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
@@ -791,8 +776,7 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
 
     ### 
     def execute(self, context):
- 
-        add_RigidBody_World()
+        add_rigidbody_world()
         
         ###selected Armature
         ob = bpy.context.active_object
@@ -879,7 +863,6 @@ class CreateRigidBodiesJoints(bpy.types.Operator):
 
 
 class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
-
     bl_idname = "genrigidbodies.physicsjoints"
     bl_label = "Add Active & Joints"
     bl_description = "Add Active & Joints"
@@ -939,14 +922,12 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
 
     def __init__(self):
-        
         self.p_rb_dim = (1, 1, 1)
         self.joint_size = 1
         self.tr_size = 0.33
 
 
     def draw(self, context):
-
         #if len(bpy.context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
@@ -1047,8 +1028,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
     # 
     def execute(self, context):
-
-        add_RigidBody_World()        
+        add_rigidbody_world()
         
         ###selected Armature
         ob = bpy.context.active_object
@@ -1145,6 +1125,8 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 rc2.display.show_shadows = False
                 rc2.hide_render = True
                 rc2.display_type = 'BOUNDS'
+                rc2.show_bounds = True
+                rc2.display_bounds_type = 'BOX'
                 
                 ### Rigid Body Dimensions
                 bpy.context.object.dimensions = [
@@ -1170,7 +1152,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 rc2.rigid_body.kinematic = True
 
                 ### Child OF
-                CoC2 = rc2.constraints.new("CHILD_OF")
+                CoC2 = rc2.constraints.new('CHILD_OF')
                 CoC2.name = 'Child_Of_' + selected_bone.parent.name
                 CoC2.target = ob
                 CoC2.subtarget = selected_bone.parent.name
@@ -1179,10 +1161,8 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                 sub_target = bpy.data.objects[ob.name].pose.bones[selected_bone.parent.name]
                 #self.report({'INFO'}, str(sub_target))
                 CoC2.inverse_matrix = sub_target.matrix.inverted()
-                # unnecessary?
                 rc2.update_tag(refresh={'OBJECT'})
-                dg = bpy.context.evaluated_depsgraph_get()
-                dg.update()
+                bpy.context.view_layer.update()
 
             ###constraint.object1
             
@@ -1190,7 +1170,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
                     
                 if selected_bone.parent not in pole_dict:
                     pole_dict[selected_bone.parent] = rc2 
-                    self.report({'INFO'}, "pole_dict:" + str(pole_dict)) 
+                    #self.report({'INFO'}, "pole_dict:" + str(pole_dict))
                     jc.rigid_body_constraint.object1 = rc2
                     parent_bones_ob = "rb." + ob.name + "." + selected_bone.name
                 else:
@@ -1216,6 +1196,8 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             rc.display.show_shadows = False
             rc.display_type = 'BOUNDS'
             rc.hide_render = True
+            rc.show_bounds = True
+            rc.display_bounds_type = self.p_rb_shape
 
             ###constraint.object2
             #self.report({'INFO'}, "parent_bones_ob:" + str(parent_bones_ob))
@@ -1260,21 +1242,15 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
 
             ## Make Track offset point
             bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
-            bpy.context.object.parent = rc
             tr = bpy.context.active_object
             tr.name = "tr." + selected_bone.name
             tr.empty_display_size = selected_bone.length * self.tr_size
             tr.rotation_mode = 'QUATERNION'
 
-            ### Set Copy Transform Constraint
-            bpy.ops.object.constraint_add(type='COPY_TRANSFORMS')
-            con = bpy.context.object.constraints[-1]
-            con.target = ob
-            con.subtarget = selected_bone.name
-            
-            ### Apply Transform
-            bpy.ops.object.visual_transform_apply()
-            bpy.context.object.constraints.remove(con)
+            ### Align track object to bone
+            align_obj_to_bone(tr, ob, selected_bone.name)
+            tr.parent = rc
+            tr.matrix_parent_inverse = rc.matrix_world.inverted()
 
             ### Set Copy Transform Constraint To Bone
             bpy.context.view_layer.objects.active = ob
@@ -1285,7 +1261,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             ab = bpy.context.active_pose_bone
 
             #self.report({'INFO'}, str(rc.name))
-            con = ab.constraints.new("COPY_TRANSFORMS")
+            con = ab.constraints.new('COPY_TRANSFORMS')
             #self.report({'INFO'}, "info:" + str(CoC))
             con.name = 'Copy Transforms Of ' + tr.name
             con.target = tr
@@ -1295,8 +1271,7 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
             bpy.context.active_bone.use_connect = False
 
             bpy.ops.object.mode_set(mode='OBJECT')
-            dg = bpy.context.evaluated_depsgraph_get()
-            dg.update()
+            bpy.context.view_layer.update()
             tr.hide_viewport = True
 
         ###clear object select
@@ -1311,17 +1286,25 @@ class CreateRigidBodiesPhysicsJoints(bpy.types.Operator):
         self.report({'INFO'}, "OK")
         return {'FINISHED'}
 
-# add menu
-def menu_fn(self, context):
-    self.layout.separator()
-    self.layout.menu(MenuRigidBodies.bl_idname, icon='MESH_ICOSPHERE')
-
-def add_RigidBody_World():
+# utils
+def add_rigidbody_world():
         scene = bpy.context.scene
         if scene.rigidbody_world is None:
             bpy.ops.rigidbody.world_add()
 
 
+def align_obj_to_bone(obj, rig, bone_name):
+    bone = rig.data.bones[bone_name]
+
+    mat = rig.matrix_world @ bone.matrix_local
+
+    obj.location = mat.to_translation()
+
+    obj.rotation_mode = 'QUATERNION'
+    obj.rotation_quaternion = mat.to_quaternion()
+
+
+# add menu
 classes = (
     CreateRigidBodiesOnBones,
     CreateRigidBodiesPhysics,
@@ -1330,6 +1313,10 @@ classes = (
     MenuRigidBodies,
 #    GenRigidBodyToolsPanel
 )
+
+def menu_fn(self, context):
+    self.layout.separator()
+    self.layout.menu(MenuRigidBodies.bl_idname, icon='MESH_ICOSPHERE')
 
 # addon enable
 def register():
