@@ -189,6 +189,27 @@ class UProp:
         min = 0,
         max = 5
     )
+    rb_radius = FloatProperty(
+        name = "Radius",
+        description = "rigid body Collision Radius",
+        default = 0.3,
+        subtype = 'NONE',
+        min = 0,
+        max = 5
+    )
+    rb_length = FloatProperty(
+        name = "Height",
+        description = "rigid body Collision length",
+        default = 1.0,
+        subtype = 'NONE',
+        min = 0,
+        max = 5
+    )
+    rb_inset_capsule = BoolProperty(
+        name='Inset Capsule',
+        description='If shape type is capsule, decrement a length by radius to inscribe',
+        default=False
+    )
     rb_mass = FloatProperty(
         name = "Mass",
         description = "rigid body mass",
@@ -236,12 +257,12 @@ class UProp:
     rb_add_pole_rootbody = BoolProperty(
         name='Add Pole Object',
         description='Add Pole Object',
-        default=True
+        default=False
     )
     rb_pole_rootbody_dim = FloatVectorProperty(
         name = "Pole Object Dimension",
         description = "Pole Object Dimension XYZ",
-        default = (1, 1, 1),
+        default = (0.33, 0.33, 0.33),
         subtype = 'XYZ',
         unit = 'NONE',
         min = 0,
@@ -262,10 +283,10 @@ class UProp:
     jo_size = FloatProperty(
         name = "joint Size",
         description = "joint Size",
-        default = 1,
+        default = 0.33,
         subtype = 'NONE',
-        min = 0,
-        max = 5
+        min = 0.001,
+        max = 1
     )
     jo_limit_lin_x = BoolProperty(
         name='X Axis',
@@ -442,6 +463,9 @@ class AddPassiveProperties(bpy.types.PropertyGroup):
     ###instance UProp.rigidbody
     p_rb_shape : UProp.rb_shape
     p_rb_dim : UProp.rb_dim
+    p_rb_radius : UProp.rb_radius
+    p_rb_length : UProp.rb_length
+    p_rb_inset_capsule : UProp.rb_inset_capsule
     p_rb_mass : UProp.rb_mass
     p_rb_friction : UProp.rb_friction
     p_rb_bounciness : UProp.rb_bounciness
@@ -453,7 +477,13 @@ class AddPassiveProperties(bpy.types.PropertyGroup):
     def draw(self, layout):
         box = layout.box()
         box.prop(self, 'p_rb_shape')
-        box.prop(self, 'p_rb_dim')
+        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
+            box.prop(self, 'p_rb_radius')
+            box.prop(self, 'p_rb_length')
+            if self.p_rb_shape == 'CAPSULE':
+                box.prop(self, 'p_rb_inset_capsule')
+        else:
+            box.prop(self, 'p_rb_dim')
         box.prop(self, 'p_rb_mass')
         box.prop(self, 'p_rb_friction')
         box.prop(self, 'p_rb_bounciness')
@@ -467,6 +497,9 @@ class AddPassiveProperties(bpy.types.PropertyGroup):
 class AddActiveProperties(bpy.types.PropertyGroup):
     ###instance UProp.rigidbody
     p_rb_shape : UProp.rb_shape
+    p_rb_radius : UProp.rb_radius
+    p_rb_length : UProp.rb_length
+    p_rb_inset_capsule : UProp.rb_inset_capsule
     p_rb_dim : UProp.rb_dim
     p_rb_mass : UProp.rb_mass
     p_rb_friction : UProp.rb_friction
@@ -478,7 +511,13 @@ class AddActiveProperties(bpy.types.PropertyGroup):
     def draw(self, layout):
         box = layout.box()
         box.prop(self, 'p_rb_shape')
-        box.prop(self, 'p_rb_dim')
+        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
+            box.prop(self, 'p_rb_radius')
+            box.prop(self, 'p_rb_length')
+            if self.p_rb_shape == 'CAPSULE':
+                box.prop(self, 'p_rb_inset_capsule')
+        else:
+            box.prop(self, 'p_rb_dim')
         box.prop(self, 'p_rb_mass')
         box.prop(self, 'p_rb_friction')
         box.prop(self, 'p_rb_bounciness')
@@ -602,6 +641,9 @@ class AddJointProperties(bpy.types.PropertyGroup):
 class AddActiveNJointProperties(bpy.types.PropertyGroup):
     ###instance UProp.rigidbody
     p_rb_shape : UProp.rb_shape
+    p_rb_radius : UProp.rb_radius
+    p_rb_length : UProp.rb_length
+    p_rb_inset_capsule : UProp.rb_inset_capsule
     p_rb_dim : UProp.rb_dim
     p_rb_mass : UProp.rb_mass
     p_rb_friction : UProp.rb_friction
@@ -647,7 +689,13 @@ class AddActiveNJointProperties(bpy.types.PropertyGroup):
         ###Rigid Body Object
         box = layout.box()
         box.prop(self, 'p_rb_shape')
-        box.prop(self, 'p_rb_dim')
+        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
+            box.prop(self, 'p_rb_radius')
+            box.prop(self, 'p_rb_length')
+            if self.p_rb_shape == 'CAPSULE':
+                box.prop(self, 'p_rb_inset_capsule')
+        else:
+            box.prop(self, 'p_rb_dim')
         box.prop(self, 'p_rb_mass')
         box.prop(self, 'p_rb_friction')
         box.prop(self, 'p_rb_bounciness')
@@ -761,10 +809,6 @@ class AddPassiveOperator(bpy.types.Operator):
     bl_description = "make rigibodies move on bones"
     bl_options = {'REGISTER', 'UNDO'}
     
-    init_rb_dimX = 0.28
-    init_rb_dimY = 1.30
-    init_rb_dimZ = 0.28
-
     def draw(self, context):
         #if len(context.selected_pose_bones) == 0:
         #    layout = self.layout
@@ -816,11 +860,7 @@ class AddPassiveOperator(bpy.types.Operator):
             align_rb_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            context.object.dimensions = [
-                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0],
-                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2],
-                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1]
-            ]
+            set_dimentions(context, params, selected_bone)
             
             ### Scale Apply
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
@@ -870,10 +910,6 @@ class AddActiveOperator(bpy.types.Operator):
     bl_label = "Add Active"
     bl_description = "make active rigibodies on bones"
     bl_options = {'REGISTER', 'UNDO'}
-
-    init_rb_dimX = 0.28
-    init_rb_dimY = 1.30
-    init_rb_dimZ = 0.28
 
     tr_size = 0.25
 
@@ -925,11 +961,7 @@ class AddActiveOperator(bpy.types.Operator):
             align_rb_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            context.object.dimensions = [
-                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0],
-                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2],
-                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1]
-            ]
+            set_dimentions(context, params, selected_bone)
             
             ### Scale Apply
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
@@ -995,8 +1027,6 @@ class AddJointOperator(bpy.types.Operator):
     bl_description = "add Add Joints on bones"
     bl_options = {'REGISTER', 'UNDO'}
 
-    init_joint_size = 0.33
-
     def draw(self, context):
         #if len(context.selected_pose_bones) == 0:
         #    layout = self.layout
@@ -1042,7 +1072,7 @@ class AddJointOperator(bpy.types.Operator):
                 align_obj_to_bone(jc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            context.object.empty_display_size = selected_bone.length * self.init_joint_size * params.joint_size
+            context.object.empty_display_size = selected_bone.length * params.joint_size
 
             ### Set Rigid Body Constraint
             bpy.ops.rigidbody.constraint_add()
@@ -1108,16 +1138,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
     bl_description = "Add Active & Joints"
     bl_options = {'REGISTER', 'UNDO'}
 
-    init_rb_dimX = 0.28
-    init_rb_dimY = 1.30
-    init_rb_dimZ = 0.28
-
-    #pole_dict = {}
-
-    init_joint_size = 0.33
-    init_polerb_size = 0.33
-
-    tr_size = 0.25
+    tr_size = 0.5
 
     def draw(self, context):
         #if len(context.selected_pose_bones) == 0:
@@ -1130,10 +1151,6 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
     # 
     def execute(self, context):
-        if context.scene.rigidbody_world is None:
-            self.report({'INFO'}, 'Faild. Current scene has no Rigidbody World')
-            return {'CANCELLED'}
-
         ###selected Armature
         ob = context.active_object
         #self.report({'INFO'}, "ob:" + str(ob))
@@ -1181,11 +1198,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
             align_rb_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            context.object.dimensions = [
-                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0],
-                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2],
-                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1]
-            ]
+            set_dimentions(context, params, selected_bone)
             
             ### Scale Apply
             bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
@@ -1205,7 +1218,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
             bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
             tr = context.active_object
             tr.name = "tr." + ob.name + "." + selected_bone.name
-            tr.empty_display_size = selected_bone.length * self.tr_size
+            tr.empty_display_size = selected_bone.length * params.joint_size * self.tr_size
             tr.rotation_mode = 'QUATERNION'
 
             ### Align track object to bone
@@ -1255,9 +1268,9 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
                     ### Rigid Body Dimensions
                     context.object.dimensions = [
-                        selected_bone.parent.length * self.init_polerb_size * params.p_rb_pole_rootbody_dim[0],
-                        selected_bone.parent.length * self.init_polerb_size * params.p_rb_pole_rootbody_dim[1],
-                        selected_bone.parent.length * self.init_polerb_size * params.p_rb_pole_rootbody_dim[2]
+                        selected_bone.parent.length * params.p_rb_pole_rootbody_dim[0],
+                        selected_bone.parent.length * params.p_rb_pole_rootbody_dim[1],
+                        selected_bone.parent.length * params.p_rb_pole_rootbody_dim[2]
                     ]
                     
                     ### Scale Apply
@@ -1311,7 +1324,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
                     align_obj_to_bone(jc, ob, selected_bone.name)
 
                 ### Set Joint radius
-                context.object.empty_display_size = selected_bone.length * self.init_joint_size * params.joint_size
+                context.object.empty_display_size = selected_bone.length * params.joint_size
                 
                 ### Set Rigid Body Constraint
                 bpy.ops.rigidbody.constraint_add()
@@ -1410,6 +1423,28 @@ class ForceCorrespondNameRBAndTrackObjectOperator(bpy.types.Operator):
 
 
 # utils
+def set_dimentions(context, params, selected_bone):
+    if params.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
+        if params.p_rb_shape == 'CAPSULE' and not params.p_rb_inset_capsule:
+            context.object.dimensions = [
+                selected_bone.length * params.p_rb_radius,
+                selected_bone.length * params.p_rb_radius,
+                selected_bone.length * (params.p_rb_length + params.p_rb_radius)
+            ]
+        else:
+            context.object.dimensions = [
+                selected_bone.length * params.p_rb_radius,
+                selected_bone.length * params.p_rb_radius,
+                selected_bone.length * params.p_rb_length
+            ]
+    else:
+        context.object.dimensions = [
+            selected_bone.length * params.p_rb_dim[0],
+            selected_bone.length * params.p_rb_dim[2],
+            selected_bone.length * params.p_rb_dim[1]
+        ]
+
+
 def align_obj_to_bone(obj, rig, bone_name):
     bone = rig.data.bones[bone_name]
 
