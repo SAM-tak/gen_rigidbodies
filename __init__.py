@@ -157,8 +157,9 @@ class ObjectMenu(bpy.types.Menu):
 
     def draw(self, context):
         self.layout.operator(ReparentOrphanTrackObjectOperator.bl_idname)
+        self.layout.operator(ForceCorrespondNameRBAndTrackObjectOperator.bl_idname)
 
-    
+
 def posemenu(self, context):
     self.layout.separator()
     self.layout.menu(PoseMenu.bl_idname, icon='MESH_ICOSPHERE')
@@ -761,11 +762,11 @@ class AddPassiveOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
     
     init_rb_dimX = 0.28
-    init_rb_dimY = 0.28
-    init_rb_dimZ = 1.30
+    init_rb_dimY = 1.30
+    init_rb_dimZ = 0.28
 
     def draw(self, context):
-        #if len(bpy.context.selected_pose_bones) == 0:
+        #if len(context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
         #    return {'FINISHED'}
@@ -780,20 +781,20 @@ class AddPassiveOperator(bpy.types.Operator):
     ### 
     def execute(self, context):
         ###selected Armature
-        ob = bpy.context.active_object
+        ob = context.active_object
         #self.report({'INFO'}, ob.data)
 
-        if len(bpy.context.selected_pose_bones) == 0:
+        if len(context.selected_pose_bones) == 0:
             return {'FINISHED'}
 
         params = context.window_manager.genrigidbodies.addpassive
 
-        for selected_bone in bpy.context.selected_pose_bones:
+        for selected_bone in context.selected_pose_bones:
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Rigidbody Cube
             bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
-            rc = bpy.context.active_object
+            rc = context.active_object
             if rc is None:
                 self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
                 return {'CANCELLED'}
@@ -815,10 +816,10 @@ class AddPassiveOperator(bpy.types.Operator):
             align_rb_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            bpy.context.object.dimensions = [
-                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0], 
-                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1], 
-                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2]
+            context.object.dimensions = [
+                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0],
+                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2],
+                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1]
             ]
             
             ### Scale Apply
@@ -828,17 +829,17 @@ class AddPassiveOperator(bpy.types.Operator):
             bpy.ops.rigidbody.object_add()
 
             if params.p_rb_rootbody_passive == True:
-                bpy.context.object.rigid_body.type = "PASSIVE"
+                context.object.rigid_body.type = "PASSIVE"
             else:
-                bpy.context.object.rigid_body.type = "ACTIVE"
+                context.object.rigid_body.type = "ACTIVE"
 
-            bpy.context.object.rigid_body.collision_shape = params.p_rb_shape
-            bpy.context.object.rigid_body.kinematic = params.p_rb_rootbody_animated
-            bpy.context.object.rigid_body.mass = params.p_rb_mass
-            bpy.context.object.rigid_body.friction = params.p_rb_friction
-            bpy.context.object.rigid_body.restitution = params.p_rb_bounciness
-            bpy.context.object.rigid_body.linear_damping = params.p_rb_translation
-            bpy.context.object.rigid_body.angular_damping = params.p_rb_rotation
+            context.object.rigid_body.collision_shape = params.p_rb_shape
+            context.object.rigid_body.kinematic = params.p_rb_rootbody_animated
+            context.object.rigid_body.mass = params.p_rb_mass
+            context.object.rigid_body.friction = params.p_rb_friction
+            context.object.rigid_body.restitution = params.p_rb_bounciness
+            context.object.rigid_body.linear_damping = params.p_rb_translation
+            context.object.rigid_body.angular_damping = params.p_rb_rotation
 
             ### Child OF
             CoC = rc.constraints.new('CHILD_OF')
@@ -853,7 +854,7 @@ class AddPassiveOperator(bpy.types.Operator):
             rc.update_tag(refresh={'OBJECT'})
 
         ###clear object select
-        bpy.context.view_layer.objects.active = ob
+        context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='POSE')
@@ -871,13 +872,13 @@ class AddActiveOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     init_rb_dimX = 0.28
-    init_rb_dimY = 0.28
-    init_rb_dimZ = 1.30
+    init_rb_dimY = 1.30
+    init_rb_dimZ = 0.28
 
     tr_size = 0.25
 
     def draw(self, context):
-        #if len(bpy.context.selected_pose_bones) == 0:
+        #if len(context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
         #    return {'FINISHED'}
@@ -891,18 +892,18 @@ class AddActiveOperator(bpy.types.Operator):
     ### 
     def execute(self, context):
         ###selected Armature
-        ob = bpy.context.active_object
+        ob = context.active_object
         #self.report({'INFO'}, ob.data)
 
         params = context.window_manager.genrigidbodies.addactive
 
-        for selected_bone in bpy.context.selected_pose_bones:
+        for selected_bone in context.selected_pose_bones:
             #self.report({'INFO'}, str(selected_bone.vector[0]))
 
             ###Create Rigidbody Cube
             bpy.ops.object.mode_set(mode='OBJECT')
             bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
-            rc = bpy.context.active_object
+            rc = context.active_object
             if rc is None:
                 self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
                 return {'CANCELLED'}
@@ -924,10 +925,10 @@ class AddActiveOperator(bpy.types.Operator):
             align_rb_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            bpy.context.object.dimensions = [
-                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0], 
-                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1], 
-                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2]
+            context.object.dimensions = [
+                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0],
+                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2],
+                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1]
             ]
             
             ### Scale Apply
@@ -936,35 +937,35 @@ class AddActiveOperator(bpy.types.Operator):
             ### Set Rigid Body
             bpy.ops.rigidbody.object_add()
 
-            bpy.context.object.rigid_body.type = "ACTIVE"
+            context.object.rigid_body.type = "ACTIVE"
 
-            bpy.context.object.rigid_body.collision_shape = params.p_rb_shape
-            bpy.context.object.rigid_body.kinematic = params.p_rb_rootbody_animated
-            bpy.context.object.rigid_body.mass = params.p_rb_mass
-            bpy.context.object.rigid_body.friction = params.p_rb_friction
-            bpy.context.object.rigid_body.restitution = params.p_rb_bounciness
-            bpy.context.object.rigid_body.linear_damping = params.p_rb_translation
-            bpy.context.object.rigid_body.angular_damping = params.p_rb_rotation
+            context.object.rigid_body.collision_shape = params.p_rb_shape
+            context.object.rigid_body.kinematic = params.p_rb_rootbody_animated
+            context.object.rigid_body.mass = params.p_rb_mass
+            context.object.rigid_body.friction = params.p_rb_friction
+            context.object.rigid_body.restitution = params.p_rb_bounciness
+            context.object.rigid_body.linear_damping = params.p_rb_translation
+            context.object.rigid_body.angular_damping = params.p_rb_rotation
 
             ## Make Track offset point
             bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
-            tr = bpy.context.active_object
+            tr = context.active_object
             tr.name = "tr." + ob.name + "." + selected_bone.name
             tr.empty_display_size = selected_bone.length * self.tr_size
             tr.rotation_mode = 'QUATERNION'
 
             ### Align track object to bone
-            align_tr_to_bone(tr, ob, selected_bone.name)
+            align_obj_to_bone(tr, ob, selected_bone.name)
             tr.parent = rc
             tr.matrix_parent_inverse = rc.matrix_world.inverted()
 
             ### Set Copy Transform Constraint To Bone
-            bpy.context.view_layer.objects.active = ob
+            context.view_layer.objects.active = ob
             bpy.ops.object.mode_set(mode='POSE')
             #bpy.ops.pose.armature_apply()
             bpy.ops.pose.select_all(action='DESELECT')
-            bpy.context.object.data.bones.active = bpy.context.object.data.bones[selected_bone.name]
-            ab = bpy.context.active_pose_bone
+            context.object.data.bones.active = context.object.data.bones[selected_bone.name]
+            ab = context.active_pose_bone
 
             #self.report({'INFO'}, str(rc.name))
             con = ab.constraints.new('COPY_TRANSFORMS')
@@ -974,10 +975,10 @@ class AddActiveOperator(bpy.types.Operator):
 
             ###bone's use_connect turn to false
             bpy.ops.object.mode_set(mode='EDIT')
-            bpy.context.active_bone.use_connect = False
+            context.active_bone.use_connect = False
         
         ###clear object select
-        bpy.context.view_layer.objects.active = ob
+        context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='POSE')
@@ -997,7 +998,7 @@ class AddJointOperator(bpy.types.Operator):
     init_joint_size = 0.33
 
     def draw(self, context):
-        #if len(bpy.context.selected_pose_bones) == 0:
+        #if len(context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
         #    return {'FINISHED'}
@@ -1010,12 +1011,14 @@ class AddJointOperator(bpy.types.Operator):
 
     ### 
     def execute(self, context):
-        add_rigidbody_world()
+        if context.scene.rigidbody_world is None:
+            self.report({'INFO'}, 'Faild. Current scene has no Rigidbody World')
+            return {'CANCELLED'}
         
         ###selected Armature
-        ob = bpy.context.active_object
+        ob = context.active_object
         #self.report({'INFO'}, ob.data)
-        spb = bpy.context.selected_pose_bones
+        spb = context.selected_pose_bones
 
         ### Apply Object transform
         bpy.ops.object.mode_set(mode='OBJECT')
@@ -1027,7 +1030,7 @@ class AddJointOperator(bpy.types.Operator):
             
             ###Create Empty Sphere
             bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
-            jc = bpy.context.active_object
+            jc = context.active_object
             if jc is None:
                 self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
                 return {'CANCELLED'}
@@ -1036,60 +1039,60 @@ class AddJointOperator(bpy.types.Operator):
             jc.rotation_mode = 'QUATERNION'
             
             if params.joint_align_bone:
-                align_joint_to_bone(jc, ob, selected_bone.name)
+                align_obj_to_bone(jc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            bpy.context.object.empty_display_size = selected_bone.length * self.init_joint_size * params.joint_size
+            context.object.empty_display_size = selected_bone.length * self.init_joint_size * params.joint_size
 
             ### Set Rigid Body Constraint
             bpy.ops.rigidbody.constraint_add()
-            bpy.context.object.rigid_body_constraint.type = params.joint_type
-            bpy.context.object.rigid_body_constraint.use_breaking = False
-            bpy.context.object.rigid_body_constraint.use_override_solver_iterations = True
-            bpy.context.object.rigid_body_constraint.breaking_threshold = 10
-            bpy.context.object.rigid_body_constraint.solver_iterations = 10
+            context.object.rigid_body_constraint.type = params.joint_type
+            context.object.rigid_body_constraint.use_breaking = False
+            context.object.rigid_body_constraint.use_override_solver_iterations = True
+            context.object.rigid_body_constraint.breaking_threshold = 10
+            context.object.rigid_body_constraint.solver_iterations = 10
 
-            bpy.context.object.rigid_body_constraint.use_limit_lin_x = params.joint_Axis_limit_x
-            bpy.context.object.rigid_body_constraint.use_limit_lin_y = params.joint_Axis_limit_y
-            bpy.context.object.rigid_body_constraint.use_limit_lin_z = params.joint_Axis_limit_z
-            bpy.context.object.rigid_body_constraint.limit_lin_x_lower = params.joint_Axis_limit_x_lower
-            bpy.context.object.rigid_body_constraint.limit_lin_y_lower = params.joint_Axis_limit_y_lower
-            bpy.context.object.rigid_body_constraint.limit_lin_z_lower = params.joint_Axis_limit_z_lower
-            bpy.context.object.rigid_body_constraint.limit_lin_x_upper = params.joint_Axis_limit_x_upper
-            bpy.context.object.rigid_body_constraint.limit_lin_y_upper = params.joint_Axis_limit_y_upper
-            bpy.context.object.rigid_body_constraint.limit_lin_z_upper = params.joint_Axis_limit_z_upper
+            context.object.rigid_body_constraint.use_limit_lin_x = params.joint_Axis_limit_x
+            context.object.rigid_body_constraint.use_limit_lin_y = params.joint_Axis_limit_y
+            context.object.rigid_body_constraint.use_limit_lin_z = params.joint_Axis_limit_z
+            context.object.rigid_body_constraint.limit_lin_x_lower = params.joint_Axis_limit_x_lower
+            context.object.rigid_body_constraint.limit_lin_y_lower = params.joint_Axis_limit_y_lower
+            context.object.rigid_body_constraint.limit_lin_z_lower = params.joint_Axis_limit_z_lower
+            context.object.rigid_body_constraint.limit_lin_x_upper = params.joint_Axis_limit_x_upper
+            context.object.rigid_body_constraint.limit_lin_y_upper = params.joint_Axis_limit_y_upper
+            context.object.rigid_body_constraint.limit_lin_z_upper = params.joint_Axis_limit_z_upper
 
-            bpy.context.object.rigid_body_constraint.use_limit_ang_x = params.joint_Angle_limit_x
-            bpy.context.object.rigid_body_constraint.use_limit_ang_y = params.joint_Angle_limit_y
-            bpy.context.object.rigid_body_constraint.use_limit_ang_z = params.joint_Angle_limit_z
-            bpy.context.object.rigid_body_constraint.limit_ang_x_lower = params.joint_Angle_limit_x_lower
-            bpy.context.object.rigid_body_constraint.limit_ang_y_lower = params.joint_Angle_limit_y_lower
-            bpy.context.object.rigid_body_constraint.limit_ang_z_lower = params.joint_Angle_limit_z_lower
-            bpy.context.object.rigid_body_constraint.limit_ang_x_upper = params.joint_Angle_limit_x_upper
-            bpy.context.object.rigid_body_constraint.limit_ang_y_upper = params.joint_Angle_limit_y_upper
-            bpy.context.object.rigid_body_constraint.limit_ang_z_upper = params.joint_Angle_limit_z_upper
+            context.object.rigid_body_constraint.use_limit_ang_x = params.joint_Angle_limit_x
+            context.object.rigid_body_constraint.use_limit_ang_y = params.joint_Angle_limit_y
+            context.object.rigid_body_constraint.use_limit_ang_z = params.joint_Angle_limit_z
+            context.object.rigid_body_constraint.limit_ang_x_lower = params.joint_Angle_limit_x_lower
+            context.object.rigid_body_constraint.limit_ang_y_lower = params.joint_Angle_limit_y_lower
+            context.object.rigid_body_constraint.limit_ang_z_lower = params.joint_Angle_limit_z_lower
+            context.object.rigid_body_constraint.limit_ang_x_upper = params.joint_Angle_limit_x_upper
+            context.object.rigid_body_constraint.limit_ang_y_upper = params.joint_Angle_limit_y_upper
+            context.object.rigid_body_constraint.limit_ang_z_upper = params.joint_Angle_limit_z_upper
 
-            bpy.context.object.rigid_body_constraint.use_spring_x = params.joint_use_spring_x
-            bpy.context.object.rigid_body_constraint.use_spring_y = params.joint_use_spring_y
-            bpy.context.object.rigid_body_constraint.use_spring_z = params.joint_use_spring_z
-            bpy.context.object.rigid_body_constraint.spring_stiffness_x = params.joint_spring_stiffness_x
-            bpy.context.object.rigid_body_constraint.spring_stiffness_y = params.joint_spring_stiffness_y
-            bpy.context.object.rigid_body_constraint.spring_stiffness_z = params.joint_spring_stiffness_z
-            bpy.context.object.rigid_body_constraint.spring_damping_x = params.joint_spring_damping_x
-            bpy.context.object.rigid_body_constraint.spring_damping_y = params.joint_spring_damping_y
-            bpy.context.object.rigid_body_constraint.spring_damping_z = params.joint_spring_damping_z
+            context.object.rigid_body_constraint.use_spring_x = params.joint_use_spring_x
+            context.object.rigid_body_constraint.use_spring_y = params.joint_use_spring_y
+            context.object.rigid_body_constraint.use_spring_z = params.joint_use_spring_z
+            context.object.rigid_body_constraint.spring_stiffness_x = params.joint_spring_stiffness_x
+            context.object.rigid_body_constraint.spring_stiffness_y = params.joint_spring_stiffness_y
+            context.object.rigid_body_constraint.spring_stiffness_z = params.joint_spring_stiffness_z
+            context.object.rigid_body_constraint.spring_damping_x = params.joint_spring_damping_x
+            context.object.rigid_body_constraint.spring_damping_y = params.joint_spring_damping_y
+            context.object.rigid_body_constraint.spring_damping_z = params.joint_spring_damping_z
 
             ###constraint.object
             if selected_bone.parent:
                 rbname = "rb." + ob.name + "." + selected_bone.parent.name
                 if rbname in context.view_layer.objects:
-                    bpy.context.object.rigid_body_constraint.object1 = context.view_layer.objects[rbname]
+                    context.object.rigid_body_constraint.object1 = context.view_layer.objects[rbname]
             rbname = "rb." + ob.name + "." + selected_bone.name
             if rbname in context.view_layer.objects:
-                bpy.context.object.rigid_body_constraint.object2 = context.view_layer.objects[rbname]
+                context.object.rigid_body_constraint.object2 = context.view_layer.objects[rbname]
 
         ###clear object select
-        bpy.context.view_layer.objects.active = ob
+        context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='POSE')
@@ -1106,8 +1109,8 @@ class AddActiveNJointOperator(bpy.types.Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     init_rb_dimX = 0.28
-    init_rb_dimY = 0.28
-    init_rb_dimZ = 1.30
+    init_rb_dimY = 1.30
+    init_rb_dimZ = 0.28
 
     #pole_dict = {}
 
@@ -1117,7 +1120,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
     tr_size = 0.25
 
     def draw(self, context):
-        #if len(bpy.context.selected_pose_bones) == 0:
+        #if len(context.selected_pose_bones) == 0:
         #    layout = self.layout
         #    layout.label(text="You shuld select bone first", icon="ERROR")
         #    return {'FINISHED'}
@@ -1127,13 +1130,15 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
     # 
     def execute(self, context):
-        add_rigidbody_world()
-        
+        if context.scene.rigidbody_world is None:
+            self.report({'INFO'}, 'Faild. Current scene has no Rigidbody World')
+            return {'CANCELLED'}
+
         ###selected Armature
-        ob = bpy.context.active_object
+        ob = context.active_object
         #self.report({'INFO'}, "ob:" + str(ob))
 
-        spb = bpy.context.selected_pose_bones
+        spb = context.selected_pose_bones
 
         bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -1141,7 +1146,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
         
         rb_dict = {}
         
-        wm = bpy.context.window_manager 
+        wm = context.window_manager 
         
         tot = len(spb) * 2
         wm.progress_begin(0, tot)
@@ -1157,9 +1162,9 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
             ###Create Rigidbody Cube
             bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
-            rc = bpy.context.active_object
+            rc = context.active_object
             if rc is None:
-                self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
+                self.report({'INFO'}, 'Rigidbody creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
                 return {'CANCELLED'}
             rc.name = "rb." + ob.name + "." + selected_bone.name
             rc.rotation_mode = 'QUATERNION'
@@ -1176,10 +1181,10 @@ class AddActiveNJointOperator(bpy.types.Operator):
             align_rb_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
-            bpy.context.object.dimensions = [
-                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0], 
-                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1], 
-                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2]
+            context.object.dimensions = [
+                selected_bone.length * self.init_rb_dimX * params.p_rb_dim[0],
+                selected_bone.length * self.init_rb_dimZ * params.p_rb_dim[2],
+                selected_bone.length * self.init_rb_dimY * params.p_rb_dim[1]
             ]
             
             ### Scale Apply
@@ -1188,33 +1193,33 @@ class AddActiveNJointOperator(bpy.types.Operator):
             ### Set Rigid Body
             bpy.ops.rigidbody.object_add()
 
-            bpy.context.object.rigid_body.type = "ACTIVE"
-            bpy.context.object.rigid_body.collision_shape = params.p_rb_shape
-            bpy.context.object.rigid_body.mass = params.p_rb_mass
-            bpy.context.object.rigid_body.friction = params.p_rb_friction
-            bpy.context.object.rigid_body.restitution = params.p_rb_bounciness
-            bpy.context.object.rigid_body.linear_damping = params.p_rb_translation
-            bpy.context.object.rigid_body.angular_damping = params.p_rb_rotation
+            context.object.rigid_body.type = "ACTIVE"
+            context.object.rigid_body.collision_shape = params.p_rb_shape
+            context.object.rigid_body.mass = params.p_rb_mass
+            context.object.rigid_body.friction = params.p_rb_friction
+            context.object.rigid_body.restitution = params.p_rb_bounciness
+            context.object.rigid_body.linear_damping = params.p_rb_translation
+            context.object.rigid_body.angular_damping = params.p_rb_rotation
 
             ## Make Track offset point
             bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
-            tr = bpy.context.active_object
+            tr = context.active_object
             tr.name = "tr." + ob.name + "." + selected_bone.name
             tr.empty_display_size = selected_bone.length * self.tr_size
             tr.rotation_mode = 'QUATERNION'
 
             ### Align track object to bone
-            align_tr_to_bone(tr, ob, selected_bone.name)
+            align_obj_to_bone(tr, ob, selected_bone.name)
             tr.parent = rc
             tr.matrix_parent_inverse = rc.matrix_world.inverted()
 
             ### Set Copy Transform Constraint To Bone
-            bpy.context.view_layer.objects.active = ob
+            context.view_layer.objects.active = ob
             bpy.ops.object.mode_set(mode='POSE')
             #bpy.ops.pose.armature_apply()
             bpy.ops.pose.select_all(action='DESELECT')
-            bpy.context.object.data.bones.active = bpy.context.object.data.bones[selected_bone.name]
-            ab = bpy.context.active_pose_bone
+            context.object.data.bones.active = context.object.data.bones[selected_bone.name]
+            ab = context.active_pose_bone
 
             #self.report({'INFO'}, str(rc.name))
             con = ab.constraints.new('COPY_TRANSFORMS')
@@ -1224,7 +1229,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
             ###bone's use_connect turn to false
             bpy.ops.object.mode_set(mode='EDIT')
-            bpy.context.active_bone.use_connect = False
+            context.active_bone.use_connect = False
 
             bpy.ops.object.mode_set(mode='OBJECT')
 
@@ -1233,11 +1238,10 @@ class AddActiveNJointOperator(bpy.types.Operator):
                 if "rb." + ob.name + "." + selected_bone.parent.name in context.view_layer.objects:
                     rb_dict[selected_bone.parent] = context.view_layer.objects["rb." + ob.name + "." + selected_bone.parent.name]
 
-                elif params.p_rb_add_pole_rootbody == True:
-
+                elif params.p_rb_add_pole_rootbody:
                     ###Create Rigidbody Cube
                     bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.parent.center)
-                    rc = bpy.context.active_object
+                    rc = context.active_object
                     rc.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
                     rc.rotation_mode = 'QUATERNION'
                     rc.show_in_front = True
@@ -1250,7 +1254,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
                     rb_dict[selected_bone.parent] = rc
 
                     ### Rigid Body Dimensions
-                    bpy.context.object.dimensions = [
+                    context.object.dimensions = [
                         selected_bone.parent.length * self.init_polerb_size * params.p_rb_pole_rootbody_dim[0],
                         selected_bone.parent.length * self.init_polerb_size * params.p_rb_pole_rootbody_dim[1],
                         selected_bone.parent.length * self.init_polerb_size * params.p_rb_pole_rootbody_dim[2]
@@ -1283,7 +1287,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
                     #self.report({'INFO'}, str(sub_target))
                     CoC.inverse_matrix = sub_target.matrix.inverted()
         
-        #bpy.context.view_layer.update()
+        #context.view_layer.update()
         print('Joint Session')
         
         ###Joint Session
@@ -1295,24 +1299,25 @@ class AddActiveNJointOperator(bpy.types.Operator):
             i += 1
             wm.progress_update(i)
 
-            if selected_bone in rb_dict and selected_bone.parent in rb_dict:
+            if selected_bone in rb_dict:
                 ###Create Joint Empty
                 bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
-                jc = bpy.context.active_object
+                jc = context.active_object
                 jc.name = "joint." + ob.name + "." + selected_bone.name
                 jc.show_in_front = True
                 jc.rotation_mode = 'QUATERNION'
                 
                 if params.joint_align_bone:
-                    align_joint_to_bone(jc, ob, selected_bone.name)
+                    align_obj_to_bone(jc, ob, selected_bone.name)
 
                 ### Set Joint radius
-                bpy.context.object.empty_display_size = selected_bone.length * self.init_joint_size * params.joint_size
+                context.object.empty_display_size = selected_bone.length * self.init_joint_size * params.joint_size
                 
                 ### Set Rigid Body Constraint
                 bpy.ops.rigidbody.constraint_add()
                 
-                jc.rigid_body_constraint.object1 = rb_dict[selected_bone.parent]
+                if selected_bone.parent in rb_dict:
+                    jc.rigid_body_constraint.object1 = rb_dict[selected_bone.parent]
                 jc.rigid_body_constraint.object2 = rb_dict[selected_bone]
 
                 jc.rigid_body_constraint.type = params.joint_type
@@ -1352,7 +1357,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
                 jc.rigid_body_constraint.spring_damping_z = params.joint_spring_damping_z
 
         ###clear object select
-        bpy.context.view_layer.objects.active = ob
+        context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='POSE')
@@ -1385,25 +1390,27 @@ class ReparentOrphanTrackObjectOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# utils
-def add_rigidbody_world():
-    scene = bpy.context.scene
-    if scene.rigidbody_world is None:
-        bpy.ops.rigidbody.world_add()
-
-
-def align_joint_to_bone(obj, rig, bone_name):
-    bone = rig.data.bones[bone_name]
-
-    mat = rig.matrix_world @ bone.matrix_local @ mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'X')
+class ForceCorrespondNameRBAndTrackObjectOperator(bpy.types.Operator):
+    bl_idname = "genrigidbodies.force_correspond_name_rb_n_tr"
+    bl_label = "Repair Corresponding"
+    bl_description = "If 'tr.' object's parent 'rb.' object has non-corresponding name, rename it."
+    bl_options = {'UNDO'}
     
-    obj.location = mat.to_translation()
+    def execute(self, context):
+        print(context.view_layer.objects)
+        for i in context.selected_objects:
+            if i.name.startswith("tr.") and i.parent and i.parent.name.startswith("rb."):
+                correspondName = 'rb' + i.name[2:]
+                print(correspondName)
+                if correspondName != i.parent.name:
+                    print('rename')
+                    i.parent.name = correspondName
 
-    obj.rotation_mode = 'QUATERNION'
-    obj.rotation_quaternion = mat.to_quaternion()
+        return {'FINISHED'}
 
 
-def align_tr_to_bone(obj, rig, bone_name):
+# utils
+def align_obj_to_bone(obj, rig, bone_name):
     bone = rig.data.bones[bone_name]
 
     mat = rig.matrix_world @ bone.matrix_local
@@ -1438,6 +1445,7 @@ register, unregister = bpy.utils.register_classes_factory((
     AddActiveNJointOperator,
     AddActiveNJointProperties,
     ReparentOrphanTrackObjectOperator,
+    ForceCorrespondNameRBAndTrackObjectOperator,
     PoseMenu,
     ObjectMenu,
     Properties,
