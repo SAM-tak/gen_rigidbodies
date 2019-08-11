@@ -158,6 +158,7 @@ class ObjectMenu(bpy.types.Menu):
     def draw(self, context):
         self.layout.operator(ReparentOrphanTrackObjectOperator.bl_idname)
         self.layout.operator(ForceCorrespondNameRBAndTrackObjectOperator.bl_idname)
+        self.layout.operator(ConnectOperator.bl_idname)
 
 
 def posemenu(self, context):
@@ -1422,6 +1423,20 @@ class ForceCorrespondNameRBAndTrackObjectOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+class ConnectOperator(bpy.types.Operator):
+    bl_idname = "genrigidbodies.connect"
+    bl_label = "Connect"
+    bl_description = "Set Rigidbody Constraints Object paratemter of selected objects active object."
+    bl_options = {'UNDO'}
+    
+    def execute(self, context):
+        for i in context.selected_objects:
+            if i != context.active_object and i.rigid_body_constraint:
+                i.rigid_body_constraint.object1 = context.active_object
+
+        return {'FINISHED'}
+
+
 # utils
 def set_dimentions(context, params, selected_bone):
     if params.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
@@ -1481,6 +1496,7 @@ register, unregister = bpy.utils.register_classes_factory((
     AddActiveNJointProperties,
     ReparentOrphanTrackObjectOperator,
     ForceCorrespondNameRBAndTrackObjectOperator,
+    ConnectOperator,
     PoseMenu,
     ObjectMenu,
     Properties,
