@@ -1425,7 +1425,7 @@ class ForceCorrespondNameRBAndTrackObjectOperator(bpy.types.Operator):
 
 class ConnectOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.connect"
-    bl_label = "Connect"
+    bl_label = "Connect Rigidbody Constraint"
     bl_description = "Set Rigidbody Constraints Object paratemter of selected objects active object."
     bl_options = {'UNDO'}
     
