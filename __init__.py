@@ -992,25 +992,23 @@ class AddActiveOperator(bpy.types.Operator):
             tr.parent = rc
             tr.matrix_parent_inverse = rc.matrix_world.inverted()
 
-            ### Set Copy Transform Constraint To Bone
-            context.view_layer.objects.active = ob
-            bpy.ops.object.mode_set(mode='POSE')
-            #bpy.ops.pose.armature_apply()
-            bpy.ops.pose.select_all(action='DESELECT')
-            context.object.data.bones.active = context.object.data.bones[selected_bone.name]
-            ab = context.active_pose_bone
+        ### bone's use_connect turn to false
+        bpy.ops.object.mode_set(mode='EDIT')
+        for selected_bone in spb:
+            ob.data.edit_bones[selected_bone.name].use_connect = False
 
+        ### Set Copy Transform Constraint To Bone
+        context.view_layer.objects.active = ob
+        bpy.ops.object.mode_set(mode='POSE')
+        for selected_bone in context.selected_pose_bones:
+            tr = py.data.objects["tr." + ob.name + "." + selected_bone.name]
             #self.report({'INFO'}, str(rc.name))
-            con = ab.constraints.new('COPY_TRANSFORMS')
+            con = selected_bone.constraints.new('COPY_TRANSFORMS')
             #self.report({'INFO'}, "info:" + str(CoC))
             con.name = 'Copy Transforms Of ' + tr.name
             con.target = tr
-
-            ###bone's use_connect turn to false
-            bpy.ops.object.mode_set(mode='EDIT')
-            context.active_bone.use_connect = False
         
-        ###clear object select
+        ### clear object select
         context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='OBJECT')
         bpy.ops.object.select_all(action='DESELECT')
@@ -1163,20 +1161,10 @@ class AddActiveNJointOperator(bpy.types.Operator):
         params = context.window_manager.genrigidbodies.addactivenjoint
         
         rb_dict = {}
-        
-        wm = context.window_manager 
-        
-        tot = len(spb) * 2
-        wm.progress_begin(0, tot)
-        i = 0
 
         ###Rigid Body Session
         for selected_bone in spb:
-            print(selected_bone)
             #self.report({'INFO'}, str(selected_bone.vector[0]))
-
-            i += 1
-            wm.progress_update(i)
 
             ###Create Rigidbody Cube
             bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
@@ -1226,26 +1214,6 @@ class AddActiveNJointOperator(bpy.types.Operator):
             align_obj_to_bone(tr, ob, selected_bone.name)
             tr.parent = rc
             tr.matrix_parent_inverse = rc.matrix_world.inverted()
-
-            ### Set Copy Transform Constraint To Bone
-            context.view_layer.objects.active = ob
-            bpy.ops.object.mode_set(mode='POSE')
-            #bpy.ops.pose.armature_apply()
-            bpy.ops.pose.select_all(action='DESELECT')
-            context.object.data.bones.active = context.object.data.bones[selected_bone.name]
-            ab = context.active_pose_bone
-
-            #self.report({'INFO'}, str(rc.name))
-            con = ab.constraints.new('COPY_TRANSFORMS')
-            #self.report({'INFO'}, "info:" + str(CoC))
-            con.name = 'Copy Transforms Of ' + tr.name
-            con.target = tr
-
-            ###bone's use_connect turn to false
-            bpy.ops.object.mode_set(mode='EDIT')
-            context.active_bone.use_connect = False
-
-            bpy.ops.object.mode_set(mode='OBJECT')
 
             if selected_bone.parent is not None and selected_bone.parent not in spb and selected_bone.parent not in rb_dict:
 
@@ -1300,18 +1268,13 @@ class AddActiveNJointOperator(bpy.types.Operator):
                     sub_target = bpy.data.objects[ob.name].pose.bones[selected_bone.parent.name]
                     #self.report({'INFO'}, str(sub_target))
                     CoC.inverse_matrix = sub_target.matrix.inverted()
-        
+
         #context.view_layer.update()
         print('Joint Session')
         
         ###Joint Session
         for selected_bone in spb:
-            print(selected_bone)
-
             #self.report({'INFO'}, str(selected_bone.vector[0]))
-
-            i += 1
-            wm.progress_update(i)
 
             if selected_bone in rb_dict:
                 ###Create Joint Empty
@@ -1369,6 +1332,26 @@ class AddActiveNJointOperator(bpy.types.Operator):
                 jc.rigid_body_constraint.spring_damping_x = params.joint_spring_damping_x
                 jc.rigid_body_constraint.spring_damping_y = params.joint_spring_damping_y
                 jc.rigid_body_constraint.spring_damping_z = params.joint_spring_damping_z
+        
+        ###bone's use_connect turn to false
+        context.view_layer.objects.active = ob
+        bpy.ops.object.mode_set(mode='EDIT')
+        for selected_bone in spb:
+            ob.data.edit_bones[selected_bone.name].use_connect = False
+
+        ### Set Copy Transform Constraint To Bone
+        bpy.ops.object.mode_set(mode='POSE')
+        for selected_bone in spb:
+            #bpy.ops.pose.armature_apply()
+            ab = selected_bone
+
+            tr = bpy.data.objects["tr." + ob.name + "." + selected_bone.name]
+
+            #self.report({'INFO'}, str(rc.name))
+            con = ab.constraints.new('COPY_TRANSFORMS')
+            #self.report({'INFO'}, "info:" + str(CoC))
+            con.name = 'Copy Transforms Of ' + tr.name
+            con.target = tr
 
         ###clear object select
         context.view_layer.objects.active = ob
@@ -1376,8 +1359,6 @@ class AddActiveNJointOperator(bpy.types.Operator):
         bpy.ops.object.select_all(action='DESELECT')
         bpy.ops.object.mode_set(mode='POSE')
         bpy.ops.pose.select_all(action='DESELECT')
-
-        wm.progress_end()
 
         self.report({'INFO'}, "OK")
         return {'FINISHED'}
