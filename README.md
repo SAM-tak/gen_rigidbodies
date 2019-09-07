@@ -1,52 +1,64 @@
-# Rigid Bodies Generator（剛体ツール）
-Add Rigid bones and Joints on selected bones easily.  
-選択したボーンに沿ってRigid Body（剛体）とRigid Body Constraints（ジョイント）を作成します。
+# GenRigidBodies
 
-## Requirements（使用条件）
-* Blender 2.79 / 2.80
+*Read this in other languages: [English](README.md), [日本語](README.ja.md).*
 
-## Functions（機能）
-* Add Passive(on bones)  
-基礎剛体の作成‐ボーン追従
-* Add Active  
-基礎剛体の作成‐物理演算
-* Add Joints  
-基礎Jointの作成
-* Add Active & Joints  
-基礎剛体／連結Jointの作成
+Add Rigidbodies aligned on specified bones and joints (Rigid body constraints) easily.
 
-## Usage（使い方）
-1. Install & activate Addon.  
-アドオンをインストールして有効にします
-2. Select some bones in "pose mode".  
-pose modeで剛体やジョイントを設定したいボーンを選択します。
-3. Execute actions on "Rigid Body Gen" tab.  
-ツールシェルフの剛体ツール（Rigid Body Gen）タブの各ボタンを押します。
-4. Edit propaties on prop panel.  
-プロパティパネルで剛体とジョイントの値の設定をします。
+## Table of Contents
+<!-- TOC -->
 
-## About Options（オプションについて）
-* [PASSIVE]  
-OFF to Active type.  
-チェックを外すとACTIVEになります。
-* [animated]  
-ON to transform with armature.  
-アーマチュアの変形にPASSIVEを追従させるにはONに
-* [Add Pole Object]  
-Add "PASSIVE" rigid bones to root bone's parent in automatic.  
-選択したボーンのルート位置の親に対してPASSIVEの剛体を自動で付加します。デフォルトはON。
+- [Requirements](#requirements)
+- [Functions](#functions)
+- [Usage](#usage)
+- [About Options](#about-options)
+  - [**PASSIVE**](#passive)
+  - [**animated**](#animated)
+  - [**Add Pole Object**](#add-pole-object)
+- [Notes](#notes)
+- [License](#license)
 
+<!-- /TOC -->
 
-## Note（ご注意）
-* Go back to head of timeline before you execute.  
-実行前にタイムラインは先頭に戻してから実行してください。
-* Reset pose before you execute.
-アーマチュアのポーズは変形前に戻してから実行してください。
-* Reset Armature's position to origin before you execute.
-アーマチュアを原点(0, 0, 0)に置いて実行してください
+## Requirements
 
-## Licenses（ライセンス）
-[MIT licenses](https://opensource.org/licenses/mit-license.php)
+- Blender 2.80+
 
-## Bugs
-* 
+## Functions
+
+- Add Passive Rigidbody objects on bones
+- Add Active Rigidbody objects on bones
+- Add Joints between two bones
+- Add Active & Joints
+
+## Usage
+
+1. Install & activate this Add-on.
+1. Select some bones in "pose mode".
+1. Execute actions from Menu "Pose→Gen Rigidbodies".
+1. Edit propaties on prop panel.
+
+## About Options
+
+### **PASSIVE**
+
+OFF to Active type.
+
+### **animated**
+
+ON to transform with armature.
+
+### **Add Pole Object**
+
+Add "PASSIVE" rigid bones to root bone's parent in automatic.
+
+default is off.
+
+## Notes
+
+- Go back to head of timeline before you execute.
+- Reset pose before you execute.
+- Reset Armature's position to origin before you execute.
+
+## License
+
+[MIT license](LICENSE)
