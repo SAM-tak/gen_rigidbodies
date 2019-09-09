@@ -11,9 +11,6 @@ Add Rigidbodies aligned on specified bones and joints (Rigid body constraints) e
 - [Functions](#functions)
 - [Usage](#usage)
 - [About Options](#about-options)
-  - [**PASSIVE**](#passive)
-  - [**animated**](#animated)
-  - [**Add Pole Object**](#add-pole-object)
 - [Notes](#notes)
 - [License](#license)
 
@@ -39,17 +36,12 @@ Add Rigidbodies aligned on specified bones and joints (Rigid body constraints) e
 
 ## About Options
 
-### **PASSIVE**
-
-OFF to Active type.
-
-### **animated**
-
-ON to transform with armature.
-
-### **Add Pole Object**
-
-Add "PASSIVE" rigid bones to root bone's parent in automatic.
+- *PASSIVE*
+  - OFF to Active type.
+- *animated*
+  - ON to transform with armature.
+- *Add Pole Object*
+  - Add "PASSIVE" rigid bones to root bone's parent in automatic.
 
 default is off.
 

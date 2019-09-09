@@ -12,9 +12,6 @@
 - [機能](#機能)
 - [使い方](#使い方)
 - [オプションについて](#オプションについて)
-  - [**PASSIVE**](#passive)
-  - [**animated**](#animated)
-  - [**Add Pole Object**](#add-pole-object)
 - [注意点](#注意点)
 - [ライセンス](#ライセンス)
 
@@ -44,17 +41,12 @@
 
 ## オプションについて
 
-### **PASSIVE**
-
-チェックを外すとACTIVEになります。
-
-### **animated**
-
-アーマチュアの変形にPASSIVEを追従させるにはONに。
-
-### **Add Pole Object**
-
-選択したボーンのルート位置の親に対してPASSIVEの剛体を自動で付加します。デフォルトはON。
+- *PASSIVE*
+  - チェックを外すとACTIVEになります。
+- *animated*
+  - アーマチュアの変形にPASSIVEを追従させるにはONに。
+- *Add Pole Object*
+  - 選択したボーンのルート位置の親に対してPASSIVEの剛体を自動で付加します。デフォルトはON。
 
 ## 注意点
 
