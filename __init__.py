@@ -25,7 +25,7 @@ translation_dict = {
         ("*", "Add Passive") : "Add Passive",
         ("*", "Make passive rigid bodies aligned to selected bones") : "Make passive rigid bodies aligned to selected bones",
         ("*", "Add Active") : "Add Active",
-        ("*", "Make active rigid bodies aligned to selected bones") : "Make active rigid bodies aligned to selected bones"
+        ("*", "Make active rigid bodies aligned to selected bones") : "Make active rigid bodies aligned to selected bones",
         ("*", "Add Joints") : "Add Joints",
         ("*", "Add Active & Joints") : "Add Active & Joints"
     },
@@ -58,88 +58,7 @@ types = [
     ('GENERIC', 'Generic', 'Generic')
 ]
 
-### add Tool Panel
-class AddPassivePanel(bpy.types.Panel):
-    bl_idname = "GENRIGIDBODIES_PT_AddPassive"
-    bl_space_type  = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Gen Rigid Bodies'
-    bl_context = "posemode"
-    bl_label = "Add Passive(on bones)"
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None)
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column(align=True)
-
-        context.window_manager.genrigidbodies.addpassive.draw(col)
-        op = col.operator(AddPassiveOperator.bl_idname, text=bpy.app.translations.pgettext("Execute"), icon='BONE_DATA')
-
-
-class AddActivePanel(bpy.types.Panel):
-    bl_idname = "GENRIGIDBODIES_PT_AddActive"
-    bl_space_type  = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Gen Rigid Bodies'
-    bl_context = "posemode"
-    bl_label = "Add Active"
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None)
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column(align=True)
-        
-        context.window_manager.genrigidbodies.addactive.draw(col)
-        col.operator(AddActiveOperator.bl_idname, text=bpy.app.translations.pgettext("Execute"), icon='PHYSICS')
-
-
-class AddJointPanel(bpy.types.Panel):
-    bl_idname = "GENRIGIDBODIES_PT_AddJoint"
-    bl_space_type  = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Gen Rigid Bodies'
-    bl_context = "posemode"
-    bl_label = "Add Joint"
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None)
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column(align=True)
-
-        context.window_manager.genrigidbodies.addjoint.draw(col)
-        col.operator(AddJointOperator.bl_idname, text=bpy.app.translations.pgettext("Execute"), icon='CONSTRAINT')
-
-
-class AddActiveNJointPanel(bpy.types.Panel):
-    bl_idname = "GENRIGIDBODIES_PT_AddActiveNJoint"
-    bl_space_type  = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_category = 'Gen Rigid Bodies'
-    bl_context = "posemode"
-    bl_label = "Add Active & Joint"
-
-    @classmethod
-    def poll(cls, context):
-        return (context.object is not None)
-
-    def draw(self, context):
-        layout = self.layout
-        col = layout.column(align=True)
-
-        context.window_manager.genrigidbodies.addactivenjoint.draw(col)
-        col.operator(AddActiveNJointOperator.bl_idname, text=bpy.app.translations.pgettext("Execute"), icon='MOD_PHYSICS')
-
-
-### add MainMenu
+### Menus
 class PoseMenu(bpy.types.Menu):
     bl_idname = "GENRIGIDBODIES_MT_PoseSubMenuRoot"
     bl_label = "Gen Rigid Bodies"
@@ -158,11 +77,13 @@ class PoseMenu(bpy.types.Menu):
 
     @classmethod
     def register(cls):
+        bpy.app.translations.register(__name__, translation_dict)
         bpy.types.VIEW3D_MT_pose.append(cls.menu_fn)
         
     @classmethod
     def unregister(cls):
         bpy.types.VIEW3D_MT_pose.remove(cls.menu_fn)
+        bpy.app.translations.unregister(__name__)
 
 
 class ObjectMenu(bpy.types.Menu):
@@ -478,7 +399,13 @@ class UProp:
     )
 
 
-class AddPassiveProperties(bpy.types.PropertyGroup):
+### Create Rigid Bodies On Bones
+class AddPassiveOperator(bpy.types.Operator):
+    bl_idname = "genrigidbodies.addpassivejoint"
+    bl_label = "Add Passive"
+    bl_description = "Make passive rigid bodies aligned to selected bones"
+    bl_options = {'REGISTER', 'UNDO'}
+    
     ###instance UProp.rigidbody
     p_rb_shape : UProp.rb_shape
     p_rb_dim : UProp.rb_dim
@@ -493,8 +420,8 @@ class AddPassiveProperties(bpy.types.PropertyGroup):
     p_rb_rootbody_passive : UProp.rb_rootbody_passive
     p_rb_rootbody_animated : UProp.rb_rootbody_animated
 
-    def draw(self, layout):
-        box = layout.box()
+    def draw(self, context):
+        box = self.layout.box()
         box.prop(self, 'p_rb_shape')
         if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
             box.prop(self, 'p_rb_radius')
@@ -513,320 +440,6 @@ class AddPassiveProperties(bpy.types.PropertyGroup):
         box.prop(self, 'p_rb_rootbody_animated')
 
 
-class AddActiveProperties(bpy.types.PropertyGroup):
-    ###instance UProp.rigidbody
-    p_rb_shape : UProp.rb_shape
-    p_rb_radius : UProp.rb_radius
-    p_rb_length : UProp.rb_length
-    p_rb_inset_capsule : UProp.rb_inset_capsule
-    p_rb_dim : UProp.rb_dim
-    p_rb_mass : UProp.rb_mass
-    p_rb_friction : UProp.rb_friction
-    p_rb_bounciness : UProp.rb_bounciness
-    p_rb_translation : UProp.rb_translation
-    p_rb_rotation : UProp.rb_rotation
-    p_rb_rootbody_animated : UProp.rb_rootbody_animated
-
-    def draw(self, layout):
-        box = layout.box()
-        box.prop(self, 'p_rb_shape')
-        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
-            box.prop(self, 'p_rb_radius')
-            box.prop(self, 'p_rb_length')
-            if self.p_rb_shape == 'CAPSULE':
-                box.prop(self, 'p_rb_inset_capsule')
-        else:
-            box.prop(self, 'p_rb_dim')
-        box.prop(self, 'p_rb_mass')
-        box.prop(self, 'p_rb_friction')
-        box.prop(self, 'p_rb_bounciness')
-        box.prop(self, 'p_rb_translation')
-        box.prop(self, 'p_rb_rotation')
-        #box.prop(self, 'p_rb_rootbody_passive')
-        box.prop(self, 'p_rb_rootbody_animated')
-
-
-class AddJointProperties(bpy.types.PropertyGroup):
-    ###instance UProp.joint
-    joint_type : UProp.jo_type
-    joint_size : UProp.jo_size
-    joint_align_bone : UProp.jo_align_bone
-    joint_Axis_limit_x : UProp.jo_limit_lin_x
-    joint_Axis_limit_y : UProp.jo_limit_lin_y
-    joint_Axis_limit_z : UProp.jo_limit_lin_z
-    joint_Axis_limit_x_lower : UProp.jo_limit_lin_x_lower
-    joint_Axis_limit_y_lower : UProp.jo_limit_lin_y_lower
-    joint_Axis_limit_z_lower : UProp.jo_limit_lin_z_lower
-    joint_Axis_limit_x_upper : UProp.jo_limit_lin_x_upper
-    joint_Axis_limit_y_upper : UProp.jo_limit_lin_y_upper
-    joint_Axis_limit_z_upper : UProp.jo_limit_lin_z_upper
-    joint_Angle_limit_x : UProp.jo_limit_ang_x
-    joint_Angle_limit_y : UProp.jo_limit_ang_y
-    joint_Angle_limit_z : UProp.jo_limit_ang_z
-    joint_Angle_limit_x_lower : UProp.jo_limit_ang_x_lower
-    joint_Angle_limit_y_lower : UProp.jo_limit_ang_y_lower
-    joint_Angle_limit_z_lower : UProp.jo_limit_ang_z_lower
-    joint_Angle_limit_x_upper : UProp.jo_limit_ang_x_upper
-    joint_Angle_limit_y_upper : UProp.jo_limit_ang_y_upper
-    joint_Angle_limit_z_upper : UProp.jo_limit_ang_z_upper
-    joint_use_spring_x : UProp.jo_use_spring_x
-    joint_use_spring_y : UProp.jo_use_spring_y
-    joint_use_spring_z : UProp.jo_use_spring_z
-    joint_spring_stiffness_x : UProp.jo_spring_stiffness_x
-    joint_spring_stiffness_y : UProp.jo_spring_stiffness_y
-    joint_spring_stiffness_z : UProp.jo_spring_stiffness_z
-    joint_spring_damping_x : UProp.jo_spring_damping_x
-    joint_spring_damping_y : UProp.jo_spring_damping_y
-    joint_spring_damping_z : UProp.jo_spring_damping_z
-
-    def draw(self, layout):
-        box = layout.box()
-        box.prop(self, 'joint_type')
-        box.prop(self, 'joint_size')
-        box.prop(self, 'joint_align_bone')
-
-        col = box.column(align=True)
-        col.label(text="Limits:")
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Axis_limit_x', toggle=True)
-        sub.prop(self, 'joint_Axis_limit_x_lower')
-        sub.prop(self, 'joint_Axis_limit_x_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Axis_limit_y', toggle=True)
-        sub.prop(self, 'joint_Axis_limit_y_lower')
-        sub.prop(self, 'joint_Axis_limit_y_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Axis_limit_z', toggle=True)
-        sub.prop(self, 'joint_Axis_limit_z_lower')  
-        sub.prop(self, 'joint_Axis_limit_z_upper')
-
-        #col = layout.column(align=True)
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Angle_limit_x', toggle=True)
-        sub.prop(self, 'joint_Angle_limit_x_lower')
-        sub.prop(self, 'joint_Angle_limit_x_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Angle_limit_y', toggle=True)
-        sub.prop(self, 'joint_Angle_limit_y_lower')
-        sub.prop(self, 'joint_Angle_limit_y_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Angle_limit_z', toggle=True)
-        sub.prop(self, 'joint_Angle_limit_z_lower')  
-        sub.prop(self, 'joint_Angle_limit_z_upper')
-
-        #col = layout.column(align=True)
-        col.label(text="Springs:")
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_use_spring_x', toggle=True)
-        sub.prop(self, 'joint_spring_stiffness_x')
-        sub.prop(self, 'joint_spring_damping_x')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_use_spring_y', toggle=True)
-        sub.prop(self, 'joint_spring_stiffness_y')
-        sub.prop(self, 'joint_spring_damping_y')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_use_spring_z', toggle=True)
-        sub.prop(self, 'joint_spring_stiffness_z')  
-        sub.prop(self, 'joint_spring_damping_z')
-
-
-class AddActiveNJointProperties(bpy.types.PropertyGroup):
-    ###instance UProp.rigidbody
-    p_rb_shape : UProp.rb_shape
-    p_rb_radius : UProp.rb_radius
-    p_rb_length : UProp.rb_length
-    p_rb_inset_capsule : UProp.rb_inset_capsule
-    p_rb_dim : UProp.rb_dim
-    p_rb_mass : UProp.rb_mass
-    p_rb_friction : UProp.rb_friction
-    p_rb_bounciness : UProp.rb_bounciness
-    p_rb_translation : UProp.rb_translation
-    p_rb_rotation : UProp.rb_rotation
-    p_rb_add_pole_rootbody : UProp.rb_add_pole_rootbody
-    p_rb_pole_rootbody_dim : UProp.rb_pole_rootbody_dim
-
-    ###instance UProp.joint
-    joint_type : UProp.jo_type
-    joint_size : UProp.jo_size
-    joint_align_bone : UProp.jo_align_bone
-    joint_Axis_limit_x : UProp.jo_limit_lin_x
-    joint_Axis_limit_y : UProp.jo_limit_lin_y
-    joint_Axis_limit_z : UProp.jo_limit_lin_z
-    joint_Axis_limit_x_lower : UProp.jo_limit_lin_x_lower
-    joint_Axis_limit_y_lower : UProp.jo_limit_lin_y_lower
-    joint_Axis_limit_z_lower : UProp.jo_limit_lin_z_lower
-    joint_Axis_limit_x_upper : UProp.jo_limit_lin_x_upper
-    joint_Axis_limit_y_upper : UProp.jo_limit_lin_y_upper
-    joint_Axis_limit_z_upper : UProp.jo_limit_lin_z_upper
-    joint_Angle_limit_x : UProp.jo_limit_ang_x
-    joint_Angle_limit_y : UProp.jo_limit_ang_y
-    joint_Angle_limit_z : UProp.jo_limit_ang_z
-    joint_Angle_limit_x_lower : UProp.jo_limit_ang_x_lower
-    joint_Angle_limit_y_lower : UProp.jo_limit_ang_y_lower
-    joint_Angle_limit_z_lower : UProp.jo_limit_ang_z_lower
-    joint_Angle_limit_x_upper : UProp.jo_limit_ang_x_upper
-    joint_Angle_limit_y_upper : UProp.jo_limit_ang_y_upper
-    joint_Angle_limit_z_upper : UProp.jo_limit_ang_z_upper
-    joint_use_spring_x : UProp.jo_use_spring_x
-    joint_use_spring_y : UProp.jo_use_spring_y
-    joint_use_spring_z : UProp.jo_use_spring_z
-    joint_spring_stiffness_x : UProp.jo_spring_stiffness_x
-    joint_spring_stiffness_y : UProp.jo_spring_stiffness_y
-    joint_spring_stiffness_z : UProp.jo_spring_stiffness_z
-    joint_spring_damping_x : UProp.jo_spring_damping_x
-    joint_spring_damping_y : UProp.jo_spring_damping_y
-    joint_spring_damping_z : UProp.jo_spring_damping_z
-
-    def draw(self, layout):
-        ###Rigid Body Object
-        box = layout.box()
-        box.prop(self, 'p_rb_shape')
-        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
-            box.prop(self, 'p_rb_radius')
-            box.prop(self, 'p_rb_length')
-            if self.p_rb_shape == 'CAPSULE':
-                box.prop(self, 'p_rb_inset_capsule')
-        else:
-            box.prop(self, 'p_rb_dim')
-        box.prop(self, 'p_rb_mass')
-        box.prop(self, 'p_rb_friction')
-        box.prop(self, 'p_rb_bounciness')
-        box.prop(self, 'p_rb_translation')
-        box.prop(self, 'p_rb_rotation')
-
-        #Joint Object
-        box = layout.box()
-        box.prop(self, 'joint_type')
-        box.prop(self, 'joint_size')
-        box.prop(self, 'joint_align_bone')
-        box.prop(self, 'p_rb_add_pole_rootbody')
-
-        col = box.column(align=True)
-        col.label(text="Limits:")
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Axis_limit_x', toggle=True)
-        sub.prop(self, 'joint_Axis_limit_x_lower')
-        sub.prop(self, 'joint_Axis_limit_x_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Axis_limit_y', toggle=True)
-        sub.prop(self, 'joint_Axis_limit_y_lower')
-        sub.prop(self, 'joint_Axis_limit_y_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Axis_limit_z', toggle=True)
-        sub.prop(self, 'joint_Axis_limit_z_lower')  
-        sub.prop(self, 'joint_Axis_limit_z_upper')
-
-        #col = layout.column(align=True)
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Angle_limit_x', toggle=True)
-        sub.prop(self, 'joint_Angle_limit_x_lower')
-        sub.prop(self, 'joint_Angle_limit_x_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Angle_limit_y', toggle=True)
-        sub.prop(self, 'joint_Angle_limit_y_lower')
-        sub.prop(self, 'joint_Angle_limit_y_upper')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_Angle_limit_z', toggle=True)
-        sub.prop(self, 'joint_Angle_limit_z_lower')  
-        sub.prop(self, 'joint_Angle_limit_z_upper')
-
-        #col = layout.column(align=True)
-        col.label(text="Springs:")
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_use_spring_x', toggle=True)
-        sub.prop(self, 'joint_spring_stiffness_x')
-        sub.prop(self, 'joint_spring_damping_x')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_use_spring_y', toggle=True)
-        sub.prop(self, 'joint_spring_stiffness_y')
-        sub.prop(self, 'joint_spring_damping_y')
-
-        row = col.row(align=True)
-        sub = row.row(align=True)
-        #sub.alignment = 'EXPAND'
-        sub.prop(self, 'joint_use_spring_z', toggle=True)
-        sub.prop(self, 'joint_spring_stiffness_z')  
-        sub.prop(self, 'joint_spring_damping_z')
-
-
-class Properties(bpy.types.PropertyGroup):
-    addpassive : PointerProperty(type=AddPassiveProperties)
-    addactive : PointerProperty(type=AddActiveProperties)
-    addjoint : PointerProperty(type=AddJointProperties)
-    addactivenjoint : PointerProperty(type=AddActiveNJointProperties)
-
-    @classmethod
-    def register(cls):
-        bpy.app.translations.register(__name__, translation_dict)
-        bpy.types.WindowManager.genrigidbodies = PointerProperty(type=cls)
-        
-    @classmethod
-    def unregister(cls):
-        del bpy.types.WindowManager.genrigidbodies
-        bpy.app.translations.unregister(__name__)
-
-
-### Create Rigid Bodies On Bones
-class AddPassiveOperator(bpy.types.Operator):
-    bl_idname = "genrigidbodies.addpassivejoint"
-    bl_label = "Add Passive"
-    bl_description = "Make passive rigid bodies aligned to selected bones"
-    bl_options = {'REGISTER', 'UNDO'}
-    
-    def draw(self, context):
-        context.window_manager.genrigidbodies.addpassive.draw(self.layout)
-
     def execute(self, context):
         ###selected Armature
         ob = context.active_object
@@ -835,7 +448,7 @@ class AddPassiveOperator(bpy.types.Operator):
         if len(context.selected_pose_bones) == 0:
             return {'FINISHED'}
 
-        params = context.window_manager.genrigidbodies.addpassive
+        params = self
 
         for selected_bone in context.selected_pose_bones:
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
@@ -917,8 +530,36 @@ class AddActiveOperator(bpy.types.Operator):
 
     tr_size = 0.25
 
+    ###instance UProp.rigidbody
+    p_rb_shape : UProp.rb_shape
+    p_rb_radius : UProp.rb_radius
+    p_rb_length : UProp.rb_length
+    p_rb_inset_capsule : UProp.rb_inset_capsule
+    p_rb_dim : UProp.rb_dim
+    p_rb_mass : UProp.rb_mass
+    p_rb_friction : UProp.rb_friction
+    p_rb_bounciness : UProp.rb_bounciness
+    p_rb_translation : UProp.rb_translation
+    p_rb_rotation : UProp.rb_rotation
+    p_rb_rootbody_animated : UProp.rb_rootbody_animated
+
     def draw(self, context):
-        context.window_manager.genrigidbodies.addactive.draw(self.layout)
+        box = self.layout.box()
+        box.prop(self, 'p_rb_shape')
+        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
+            box.prop(self, 'p_rb_radius')
+            box.prop(self, 'p_rb_length')
+            if self.p_rb_shape == 'CAPSULE':
+                box.prop(self, 'p_rb_inset_capsule')
+        else:
+            box.prop(self, 'p_rb_dim')
+        box.prop(self, 'p_rb_mass')
+        box.prop(self, 'p_rb_friction')
+        box.prop(self, 'p_rb_bounciness')
+        box.prop(self, 'p_rb_translation')
+        box.prop(self, 'p_rb_rotation')
+        #box.prop(self, 'p_rb_rootbody_passive')
+        box.prop(self, 'p_rb_rootbody_animated')
 
     ### 
     def execute(self, context):
@@ -927,7 +568,7 @@ class AddActiveOperator(bpy.types.Operator):
         #self.report({'INFO'}, ob.data)
         spb = context.selected_pose_bones
 
-        params = context.window_manager.genrigidbodies.addactive
+        params = self
 
         bpy.ops.object.mode_set(mode='OBJECT')
         for selected_bone in spb:
@@ -1021,8 +662,115 @@ class AddJointOperator(bpy.types.Operator):
     bl_description = "Make rigid body constraints on selected bones"
     bl_options = {'REGISTER', 'UNDO'}
 
+    ###instance UProp.joint
+    joint_type : UProp.jo_type
+    joint_size : UProp.jo_size
+    joint_align_bone : UProp.jo_align_bone
+    joint_Axis_limit_x : UProp.jo_limit_lin_x
+    joint_Axis_limit_y : UProp.jo_limit_lin_y
+    joint_Axis_limit_z : UProp.jo_limit_lin_z
+    joint_Axis_limit_x_lower : UProp.jo_limit_lin_x_lower
+    joint_Axis_limit_y_lower : UProp.jo_limit_lin_y_lower
+    joint_Axis_limit_z_lower : UProp.jo_limit_lin_z_lower
+    joint_Axis_limit_x_upper : UProp.jo_limit_lin_x_upper
+    joint_Axis_limit_y_upper : UProp.jo_limit_lin_y_upper
+    joint_Axis_limit_z_upper : UProp.jo_limit_lin_z_upper
+    joint_Angle_limit_x : UProp.jo_limit_ang_x
+    joint_Angle_limit_y : UProp.jo_limit_ang_y
+    joint_Angle_limit_z : UProp.jo_limit_ang_z
+    joint_Angle_limit_x_lower : UProp.jo_limit_ang_x_lower
+    joint_Angle_limit_y_lower : UProp.jo_limit_ang_y_lower
+    joint_Angle_limit_z_lower : UProp.jo_limit_ang_z_lower
+    joint_Angle_limit_x_upper : UProp.jo_limit_ang_x_upper
+    joint_Angle_limit_y_upper : UProp.jo_limit_ang_y_upper
+    joint_Angle_limit_z_upper : UProp.jo_limit_ang_z_upper
+    joint_use_spring_x : UProp.jo_use_spring_x
+    joint_use_spring_y : UProp.jo_use_spring_y
+    joint_use_spring_z : UProp.jo_use_spring_z
+    joint_spring_stiffness_x : UProp.jo_spring_stiffness_x
+    joint_spring_stiffness_y : UProp.jo_spring_stiffness_y
+    joint_spring_stiffness_z : UProp.jo_spring_stiffness_z
+    joint_spring_damping_x : UProp.jo_spring_damping_x
+    joint_spring_damping_y : UProp.jo_spring_damping_y
+    joint_spring_damping_z : UProp.jo_spring_damping_z
+
     def draw(self, context):
-        context.window_manager.genrigidbodies.addjoint.draw(self.layout)
+        box = self.layout.box()
+        box.prop(self, 'joint_type')
+        box.prop(self, 'joint_size')
+        box.prop(self, 'joint_align_bone')
+
+        col = box.column(align=True)
+        col.label(text="Limits:")
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Axis_limit_x', toggle=True)
+        sub.prop(self, 'joint_Axis_limit_x_lower')
+        sub.prop(self, 'joint_Axis_limit_x_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Axis_limit_y', toggle=True)
+        sub.prop(self, 'joint_Axis_limit_y_lower')
+        sub.prop(self, 'joint_Axis_limit_y_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Axis_limit_z', toggle=True)
+        sub.prop(self, 'joint_Axis_limit_z_lower')  
+        sub.prop(self, 'joint_Axis_limit_z_upper')
+
+        #col = self.layout.column(align=True)
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Angle_limit_x', toggle=True)
+        sub.prop(self, 'joint_Angle_limit_x_lower')
+        sub.prop(self, 'joint_Angle_limit_x_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Angle_limit_y', toggle=True)
+        sub.prop(self, 'joint_Angle_limit_y_lower')
+        sub.prop(self, 'joint_Angle_limit_y_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Angle_limit_z', toggle=True)
+        sub.prop(self, 'joint_Angle_limit_z_lower')  
+        sub.prop(self, 'joint_Angle_limit_z_upper')
+
+        #col = self.layout.column(align=True)
+        col.label(text="Springs:")
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_use_spring_x', toggle=True)
+        sub.prop(self, 'joint_spring_stiffness_x')
+        sub.prop(self, 'joint_spring_damping_x')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_use_spring_y', toggle=True)
+        sub.prop(self, 'joint_spring_stiffness_y')
+        sub.prop(self, 'joint_spring_damping_y')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_use_spring_z', toggle=True)
+        sub.prop(self, 'joint_spring_stiffness_z')  
+        sub.prop(self, 'joint_spring_damping_z')
+
 
     ### 
     def execute(self, context):
@@ -1038,7 +786,7 @@ class AddJointOperator(bpy.types.Operator):
         ### Apply Object transform
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        params = context.window_manager.genrigidbodies.addjoint
+        params = self
 
         for selected_bone in spb:
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
@@ -1125,8 +873,146 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
     tr_size = 0.5
 
+    ###instance UProp.rigidbody
+    p_rb_shape : UProp.rb_shape
+    p_rb_radius : UProp.rb_radius
+    p_rb_length : UProp.rb_length
+    p_rb_inset_capsule : UProp.rb_inset_capsule
+    p_rb_dim : UProp.rb_dim
+    p_rb_mass : UProp.rb_mass
+    p_rb_friction : UProp.rb_friction
+    p_rb_bounciness : UProp.rb_bounciness
+    p_rb_translation : UProp.rb_translation
+    p_rb_rotation : UProp.rb_rotation
+    p_rb_add_pole_rootbody : UProp.rb_add_pole_rootbody
+    p_rb_pole_rootbody_dim : UProp.rb_pole_rootbody_dim
+
+    ###instance UProp.joint
+    joint_type : UProp.jo_type
+    joint_size : UProp.jo_size
+    joint_align_bone : UProp.jo_align_bone
+    joint_Axis_limit_x : UProp.jo_limit_lin_x
+    joint_Axis_limit_y : UProp.jo_limit_lin_y
+    joint_Axis_limit_z : UProp.jo_limit_lin_z
+    joint_Axis_limit_x_lower : UProp.jo_limit_lin_x_lower
+    joint_Axis_limit_y_lower : UProp.jo_limit_lin_y_lower
+    joint_Axis_limit_z_lower : UProp.jo_limit_lin_z_lower
+    joint_Axis_limit_x_upper : UProp.jo_limit_lin_x_upper
+    joint_Axis_limit_y_upper : UProp.jo_limit_lin_y_upper
+    joint_Axis_limit_z_upper : UProp.jo_limit_lin_z_upper
+    joint_Angle_limit_x : UProp.jo_limit_ang_x
+    joint_Angle_limit_y : UProp.jo_limit_ang_y
+    joint_Angle_limit_z : UProp.jo_limit_ang_z
+    joint_Angle_limit_x_lower : UProp.jo_limit_ang_x_lower
+    joint_Angle_limit_y_lower : UProp.jo_limit_ang_y_lower
+    joint_Angle_limit_z_lower : UProp.jo_limit_ang_z_lower
+    joint_Angle_limit_x_upper : UProp.jo_limit_ang_x_upper
+    joint_Angle_limit_y_upper : UProp.jo_limit_ang_y_upper
+    joint_Angle_limit_z_upper : UProp.jo_limit_ang_z_upper
+    joint_use_spring_x : UProp.jo_use_spring_x
+    joint_use_spring_y : UProp.jo_use_spring_y
+    joint_use_spring_z : UProp.jo_use_spring_z
+    joint_spring_stiffness_x : UProp.jo_spring_stiffness_x
+    joint_spring_stiffness_y : UProp.jo_spring_stiffness_y
+    joint_spring_stiffness_z : UProp.jo_spring_stiffness_z
+    joint_spring_damping_x : UProp.jo_spring_damping_x
+    joint_spring_damping_y : UProp.jo_spring_damping_y
+    joint_spring_damping_z : UProp.jo_spring_damping_z
+
     def draw(self, context):
-        context.window_manager.genrigidbodies.addactivenjoint.draw(self.layout)
+        ###Rigid Body Object
+        box = self.layout.box()
+        box.prop(self, 'p_rb_shape')
+        if self.p_rb_shape in ('CONE', 'CYLINDER', 'CAPSULE', 'SPHERE'):
+            box.prop(self, 'p_rb_radius')
+            box.prop(self, 'p_rb_length')
+            if self.p_rb_shape == 'CAPSULE':
+                box.prop(self, 'p_rb_inset_capsule')
+        else:
+            box.prop(self, 'p_rb_dim')
+        box.prop(self, 'p_rb_mass')
+        box.prop(self, 'p_rb_friction')
+        box.prop(self, 'p_rb_bounciness')
+        box.prop(self, 'p_rb_translation')
+        box.prop(self, 'p_rb_rotation')
+
+        #Joint Object
+        box = self.layout.box()
+        box.prop(self, 'joint_type')
+        box.prop(self, 'joint_size')
+        box.prop(self, 'joint_align_bone')
+        box.prop(self, 'p_rb_add_pole_rootbody')
+
+        col = box.column(align=True)
+        col.label(text="Limits:")
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Axis_limit_x', toggle=True)
+        sub.prop(self, 'joint_Axis_limit_x_lower')
+        sub.prop(self, 'joint_Axis_limit_x_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Axis_limit_y', toggle=True)
+        sub.prop(self, 'joint_Axis_limit_y_lower')
+        sub.prop(self, 'joint_Axis_limit_y_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Axis_limit_z', toggle=True)
+        sub.prop(self, 'joint_Axis_limit_z_lower')  
+        sub.prop(self, 'joint_Axis_limit_z_upper')
+
+        #col = self.layout.column(align=True)
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Angle_limit_x', toggle=True)
+        sub.prop(self, 'joint_Angle_limit_x_lower')
+        sub.prop(self, 'joint_Angle_limit_x_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Angle_limit_y', toggle=True)
+        sub.prop(self, 'joint_Angle_limit_y_lower')
+        sub.prop(self, 'joint_Angle_limit_y_upper')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_Angle_limit_z', toggle=True)
+        sub.prop(self, 'joint_Angle_limit_z_lower')  
+        sub.prop(self, 'joint_Angle_limit_z_upper')
+
+        #col = self.layout.column(align=True)
+        col.label(text="Springs:")
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_use_spring_x', toggle=True)
+        sub.prop(self, 'joint_spring_stiffness_x')
+        sub.prop(self, 'joint_spring_damping_x')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_use_spring_y', toggle=True)
+        sub.prop(self, 'joint_spring_stiffness_y')
+        sub.prop(self, 'joint_spring_damping_y')
+
+        row = col.row(align=True)
+        sub = row.row(align=True)
+        #sub.alignment = 'EXPAND'
+        sub.prop(self, 'joint_use_spring_z', toggle=True)
+        sub.prop(self, 'joint_spring_stiffness_z')  
+        sub.prop(self, 'joint_spring_damping_z')
 
     # 
     def execute(self, context):
@@ -1138,7 +1024,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
         bpy.ops.object.mode_set(mode='OBJECT')
 
-        params = context.window_manager.genrigidbodies.addactivenjoint
+        params = self
         
         rb_dict = {}
 
@@ -1443,22 +1329,13 @@ def align_rb_ort_to_bone(obj, armature, bone_name):
 
 # add menu
 register, unregister = bpy.utils.register_classes_factory((
-    # AddPassivePanel,
     AddPassiveOperator,
-    AddPassiveProperties,
-    # AddActivePanel,
     AddActiveOperator,
-    AddActiveProperties,
-    # AddJointPanel,
     AddJointOperator,
-    AddJointProperties,
-    # AddActiveNJointPanel,
     AddActiveNJointOperator,
-    AddActiveNJointProperties,
     ReparentOrphanTrackObjectOperator,
     ForceCorrespondNameRBAndTrackObjectOperator,
     ConnectOperator,
     PoseMenu,
     ObjectMenu,
-    Properties,
 ))
