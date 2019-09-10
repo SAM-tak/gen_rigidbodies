@@ -6,7 +6,7 @@ import math
 bl_info = {
     "name": "Generate rigid bodies from bone",
     "author": "SAM-tak, 12funkeys",
-    "version": (1, 0, 1),
+    "version": (1, 0, 0),
     "blender": (2, 80, 0),
     "location": "pose > Gen Rigid Bodies",
     "description": "Set rigid bodies and constraints easily",
@@ -22,23 +22,23 @@ translation_dict = {
         ("*", "Make Rigid Body Tools") : "Make Rigid Body Tools",
         ("*", "Gen Rigid Bodies") : "Gen Rigid Bodies",
         ("*", "Make Rigid Bodies") : "Make Rigid Bodies",
-        ("*", "Add Passive") : "Add Passive",
+        ("*", "Add Passives") : "Add Passives",
         ("*", "Make passive rigid bodies aligned to selected bones") : "Make passive rigid bodies aligned to selected bones",
-        ("*", "Add Active") : "Add Active",
+        ("*", "Add Actives") : "Add Actives",
         ("*", "Make active rigid bodies aligned to selected bones") : "Make active rigid bodies aligned to selected bones",
         ("*", "Add Joints") : "Add Joints",
-        ("*", "Add Active & Joints") : "Add Active & Joints"
+        ("*", "Add Actives & Joints") : "Add Actives & Joints"
     },
     "ja_JP" : {
         ("*", "Make Rigid Bodies Tools") : "選択ボーン", 
         ("*", "Gen Rigid Bodies") : "剛体ツール", 
         ("*", "Make Rigid Bodies") : "選択ボーン", 
-        ("*", "Add Passive") : "基礎剛体の作成‐ボーン追従", 
+        ("*", "Add Passives") : "基礎剛体の作成‐ボーン追従", 
         ("*", "Make passive rigid bodies aligned to selected bones") : "ボーンに追従する静的剛体を作成します", 
-        ("*", "Add Active") : "基礎剛体の作成‐物理演算",
+        ("*", "Add Actives") : "基礎剛体の作成‐物理演算",
         ("*", "Make active rigid bodies aligned to selected bones") : "ボーンに追従する動的剛体を作成します", 
         ("*", "Add Joints") : "基礎Jointの作成",
-        ("*", "Add Active & Joints") : "基礎剛体／連結Jointの作成"
+        ("*", "Add Actives & Joints") : "基礎剛体／連結Jointの作成"
     }
 }
 
