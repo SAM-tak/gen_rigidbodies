@@ -4,7 +4,7 @@ import mathutils
 import math
 
 bl_info = {
-    "name": "Generate rigidbodies from bone",
+    "name": "Generate rigid bodies from bone",
     "author": "SAM-tak, 12funkeys",
     "version": (1, 0),
     "blender": (2, 80, 0),
@@ -19,22 +19,24 @@ bl_info = {
 
 translation_dict = {
     "en_US" : {
-        ("*", "Make Rigid Body Tools") : "Make Rigid Body Tools", 
-        ("*", "Rigid Body Gen") : "Rigid Body Gen", 
-        ("*", "Make Rigid Bodies") : "Make Rigid Bodies", 
-        ("*", "Add Passive(on bones)") : "Add Passive(on bones)", 
-        ("*", "make rigibodies move on bones") : "make rigibodies move on bones", 
+        ("*", "Make Rigid Body Tools") : "Make Rigid Body Tools",
+        ("*", "Gen Rigid Bodies") : "Gen Rigid Bodies",
+        ("*", "Make Rigid Bodies") : "Make Rigid Bodies",
+        ("*", "Add Passive") : "Add Passive",
+        ("*", "Make passive rigid bodies aligned to selected bones") : "Make passive rigid bodies aligned to selected bones",
         ("*", "Add Active") : "Add Active",
+        ("*", "Make active rigid bodies aligned to selected bones") : "Make active rigid bodies aligned to selected bones"
         ("*", "Add Joints") : "Add Joints",
         ("*", "Add Active & Joints") : "Add Active & Joints"
     },
     "ja_JP" : {
-        ("*", "Make Rigid Body Tools") : "選択ボーン", 
-        ("*", "Rigid Body Gen") : "剛体ツール", 
+        ("*", "Make Rigid Bodies Tools") : "選択ボーン", 
+        ("*", "Gen Rigid Bodies") : "剛体ツール", 
         ("*", "Make Rigid Bodies") : "選択ボーン", 
-        ("*", "Add Passive(on bones)") : "基礎剛体の作成‐ボーン追従", 
-        ("*", "make rigibodies move on bones") : "ボーンに追従する剛体を作成します", 
+        ("*", "Add Passive") : "基礎剛体の作成‐ボーン追従", 
+        ("*", "Make passive rigid bodies aligned to selected bones") : "ボーンに追従する静的剛体を作成します", 
         ("*", "Add Active") : "基礎剛体の作成‐物理演算",
+        ("*", "Make active rigid bodies aligned to selected bones") : "ボーンに追従する動的剛体を作成します", 
         ("*", "Add Joints") : "基礎Jointの作成",
         ("*", "Add Active & Joints") : "基礎剛体／連結Jointの作成"
     }
@@ -61,7 +63,7 @@ class AddPassivePanel(bpy.types.Panel):
     bl_idname = "GENRIGIDBODIES_PT_AddPassive"
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Gen Rigidbody'
+    bl_category = 'Gen Rigid Bodies'
     bl_context = "posemode"
     bl_label = "Add Passive(on bones)"
 
@@ -81,7 +83,7 @@ class AddActivePanel(bpy.types.Panel):
     bl_idname = "GENRIGIDBODIES_PT_AddActive"
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Gen Rigidbody'
+    bl_category = 'Gen Rigid Bodies'
     bl_context = "posemode"
     bl_label = "Add Active"
 
@@ -101,7 +103,7 @@ class AddJointPanel(bpy.types.Panel):
     bl_idname = "GENRIGIDBODIES_PT_AddJoint"
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Gen Rigidbody'
+    bl_category = 'Gen Rigid Bodies'
     bl_context = "posemode"
     bl_label = "Add Joint"
 
@@ -121,7 +123,7 @@ class AddActiveNJointPanel(bpy.types.Panel):
     bl_idname = "GENRIGIDBODIES_PT_AddActiveNJoint"
     bl_space_type  = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = 'Gen Rigidbody'
+    bl_category = 'Gen Rigid Bodies'
     bl_context = "posemode"
     bl_label = "Add Active & Joint"
 
@@ -141,7 +143,7 @@ class AddActiveNJointPanel(bpy.types.Panel):
 class PoseMenu(bpy.types.Menu):
     bl_idname = "GENRIGIDBODIES_MT_PoseSubMenuRoot"
     bl_label = "Gen Rigid Bodies"
-    bl_description = "make rigibodies & constraint"
+    bl_description = "Make rigid bodies & constraint"
 
     def draw(self, context):
         self.layout.operator(AddPassiveOperator.bl_idname, icon='BONE_DATA')
@@ -149,26 +151,42 @@ class PoseMenu(bpy.types.Menu):
         self.layout.operator(AddJointOperator.bl_idname, icon='CONSTRAINT')
         self.layout.operator(AddActiveNJointOperator.bl_idname, icon='MOD_PHYSICS')
 
+    @staticmethod
+    def menu_fn(menu, context):
+        menu.layout.separator()
+        menu.layout.menu(PoseMenu.bl_idname, icon='MESH_ICOSPHERE')
+
+    @classmethod
+    def register(cls):
+        bpy.types.VIEW3D_MT_pose.append(cls.menu_fn)
+        
+    @classmethod
+    def unregister(cls):
+        bpy.types.VIEW3D_MT_pose.remove(cls.menu_fn)
+
 
 class ObjectMenu(bpy.types.Menu):
     bl_idname = "GENRIGIDBODIES_MT_ObjectSubMenuRoot"
     bl_label = "Gen Rigid Bodies"
-    bl_description = "gen rigibodies utility"
+    bl_description = "Gen Rigid Bodies Utility"
 
     def draw(self, context):
         self.layout.operator(ReparentOrphanTrackObjectOperator.bl_idname)
         self.layout.operator(ForceCorrespondNameRBAndTrackObjectOperator.bl_idname)
-        self.layout.operator(ConnectOperator.bl_idname)
+        self.layout.operator(ConnectOperator.bl_idname, icon='MESH_ICOSPHERE')
 
+    @staticmethod
+    def menu_fn(menu, context):
+        menu.layout.separator()
+        menu.layout.menu(ObjectMenu.bl_idname)
 
-def posemenu(self, context):
-    self.layout.separator()
-    self.layout.menu(PoseMenu.bl_idname, icon='MESH_ICOSPHERE')
-
-
-def objectmenu(self, context):
-    self.layout.separator()
-    self.layout.menu(ObjectMenu.bl_idname)
+    @classmethod
+    def register(cls):
+        bpy.types.VIEW3D_MT_object.append(cls.menu_fn)
+        
+    @classmethod
+    def unregister(cls):
+        bpy.types.VIEW3D_MT_object.remove(cls.menu_fn)
 
 
 ### user prop
@@ -792,13 +810,9 @@ class Properties(bpy.types.PropertyGroup):
     def register(cls):
         bpy.app.translations.register(__name__, translation_dict)
         bpy.types.WindowManager.genrigidbodies = PointerProperty(type=cls)
-        bpy.types.VIEW3D_MT_object.append(objectmenu)
-        bpy.types.VIEW3D_MT_pose.append(posemenu)
         
     @classmethod
     def unregister(cls):
-        bpy.types.VIEW3D_MT_pose.remove(posemenu)
-        bpy.types.VIEW3D_MT_object.remove(objectmenu)
         del bpy.types.WindowManager.genrigidbodies
         bpy.app.translations.unregister(__name__)
 
@@ -806,24 +820,13 @@ class Properties(bpy.types.PropertyGroup):
 ### Create Rigid Bodies On Bones
 class AddPassiveOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addpassivejoint"
-    bl_label = "Add Passive(on bones)"
-    bl_description = "make rigibodies move on bones"
+    bl_label = "Add Passive"
+    bl_description = "Make passive rigid bodies aligned to selected bones"
     bl_options = {'REGISTER', 'UNDO'}
     
     def draw(self, context):
-        #if len(context.selected_pose_bones) == 0:
-        #    layout = self.layout
-        #    layout.label(text="You shuld select bone first", icon="ERROR")
-        #    return {'FINISHED'}
-
-        # Branch specs
-        #layout.label(text='Tree Definition')
-
-        #layout.prop(self,'chooseSet')
-        
         context.window_manager.genrigidbodies.addpassive.draw(self.layout)
 
-    ### 
     def execute(self, context):
         ###selected Armature
         ob = context.active_object
@@ -838,7 +841,7 @@ class AddPassiveOperator(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Rigidbody Cube
-            bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=ob.matrix_world @ selected_bone.center)
             rc = context.active_object
             if rc is None:
                 self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
@@ -858,7 +861,7 @@ class AddPassiveOperator(bpy.types.Operator):
             rc.show_bounds = True
             rc.display_bounds_type = params.p_rb_shape
 
-            align_rb_to_bone(rc, ob, selected_bone.name)
+            align_rb_ort_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
             set_dimentions(context, params, selected_bone)
@@ -891,7 +894,7 @@ class AddPassiveOperator(bpy.types.Operator):
             #without ops way to childof_set_inverse
             sub_target = bpy.data.objects[ob.name].pose.bones[selected_bone.name]
             #self.report({'INFO'}, str(sub_target))
-            CoC.inverse_matrix = sub_target.matrix.inverted()   
+            CoC.inverse_matrix = (ob.matrix_world @ sub_target.matrix).inverted()
             rc.update_tag(refresh={'OBJECT'})
 
         ###clear object select
@@ -909,21 +912,12 @@ class AddPassiveOperator(bpy.types.Operator):
 class AddActiveOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addactive"
     bl_label = "Add Active"
-    bl_description = "make active rigibodies on bones"
+    bl_description = "Make active rigid bodies aligned to selected bones"
     bl_options = {'REGISTER', 'UNDO'}
 
     tr_size = 0.25
 
     def draw(self, context):
-        #if len(context.selected_pose_bones) == 0:
-        #    layout = self.layout
-        #    layout.label(text="You shuld select bone first", icon="ERROR")
-        #    return {'FINISHED'}
-
-        # Branch specs
-        #layout.label(text='Tree Definition')
-
-        #layout.prop(self,'chooseSet')
         context.window_manager.genrigidbodies.addactive.draw(self.layout)
 
     ### 
@@ -931,15 +925,16 @@ class AddActiveOperator(bpy.types.Operator):
         ###selected Armature
         ob = context.active_object
         #self.report({'INFO'}, ob.data)
+        spb = context.selected_pose_bones
 
         params = context.window_manager.genrigidbodies.addactive
 
-        for selected_bone in context.selected_pose_bones:
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for selected_bone in spb:
             #self.report({'INFO'}, str(selected_bone.vector[0]))
 
             ###Create Rigidbody Cube
-            bpy.ops.object.mode_set(mode='OBJECT')
-            bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=ob.matrix_world @ selected_bone.center)
             rc = context.active_object
             if rc is None:
                 self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
@@ -959,7 +954,7 @@ class AddActiveOperator(bpy.types.Operator):
             rc.show_bounds = True
             rc.display_bounds_type = params.p_rb_shape
 
-            align_rb_to_bone(rc, ob, selected_bone.name)
+            align_rb_ort_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
             set_dimentions(context, params, selected_bone)
@@ -981,7 +976,7 @@ class AddActiveOperator(bpy.types.Operator):
             context.object.rigid_body.angular_damping = params.p_rb_rotation
 
             ## Make Track offset point
-            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
+            bpy.ops.object.empty_add(type='ARROWS')
             tr = context.active_object
             tr.name = "tr." + ob.name + "." + selected_bone.name
             tr.empty_display_size = selected_bone.length * self.tr_size
@@ -992,16 +987,16 @@ class AddActiveOperator(bpy.types.Operator):
             tr.parent = rc
             tr.matrix_parent_inverse = rc.matrix_world.inverted()
 
+        context.view_layer.objects.active = ob
         ### bone's use_connect turn to false
         bpy.ops.object.mode_set(mode='EDIT')
         for selected_bone in spb:
             ob.data.edit_bones[selected_bone.name].use_connect = False
 
         ### Set Copy Transform Constraint To Bone
-        context.view_layer.objects.active = ob
         bpy.ops.object.mode_set(mode='POSE')
-        for selected_bone in context.selected_pose_bones:
-            tr = py.data.objects["tr." + ob.name + "." + selected_bone.name]
+        for selected_bone in spb:
+            tr = bpy.data.objects["tr." + ob.name + "." + selected_bone.name]
             #self.report({'INFO'}, str(rc.name))
             con = selected_bone.constraints.new('COPY_TRANSFORMS')
             #self.report({'INFO'}, "info:" + str(CoC))
@@ -1023,19 +1018,10 @@ class AddActiveOperator(bpy.types.Operator):
 class AddJointOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addjoint"
     bl_label = "Add Joints"
-    bl_description = "add Add Joints on bones"
+    bl_description = "Make rigid body constraints on selected bones"
     bl_options = {'REGISTER', 'UNDO'}
 
     def draw(self, context):
-        #if len(context.selected_pose_bones) == 0:
-        #    layout = self.layout
-        #    layout.label(text="You shuld select bone first", icon="ERROR")
-        #    return {'FINISHED'}
-
-        # Branch specs
-        #layout.label(text='Tree Definition')
-
-        #layout.prop(self,'chooseSet')
         context.window_manager.genrigidbodies.addjoint.draw(self.layout)
 
     ### 
@@ -1058,7 +1044,7 @@ class AddJointOperator(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))            
             
             ###Create Empty Sphere
-            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
+            bpy.ops.object.empty_add(type='ARROWS', location=ob.matrix_world @ selected_bone.matrix @ selected_bone.head)
             jc = context.active_object
             if jc is None:
                 self.report({'INFO'}, 'Rigidboy creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
@@ -1134,18 +1120,12 @@ class AddJointOperator(bpy.types.Operator):
 class AddActiveNJointOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addactivenjoint"
     bl_label = "Add Active & Joints"
-    bl_description = "Add Active & Joints"
+    bl_description = "Make active rigid bodies & constraints"
     bl_options = {'REGISTER', 'UNDO'}
 
     tr_size = 0.5
 
     def draw(self, context):
-        #if len(context.selected_pose_bones) == 0:
-        #    layout = self.layout
-        #    layout.label(text="You shuld select bone first", icon="ERROR")
-        #    return {'FINISHED'}
-
-        ###Rigid Body Object
         context.window_manager.genrigidbodies.addactivenjoint.draw(self.layout)
 
     # 
@@ -1167,7 +1147,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
             #self.report({'INFO'}, str(selected_bone.vector[0]))
 
             ###Create Rigidbody Cube
-            bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.center)
+            bpy.ops.mesh.primitive_cube_add(size=1, location=ob.matrix_world @ selected_bone.center)
             rc = context.active_object
             if rc is None:
                 self.report({'INFO'}, 'Rigidbody creation Failded. Verify Rigidbody World exists and set current collection to Rigidbody World')
@@ -1184,7 +1164,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
             rb_dict[selected_bone] = rc
             
             ### Aligh to Bone
-            align_rb_to_bone(rc, ob, selected_bone.name)
+            align_rb_ort_to_bone(rc, ob, selected_bone.name)
             
             ### Rigid Body Dimensions
             set_dimentions(context, params, selected_bone)
@@ -1204,7 +1184,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
             context.object.rigid_body.angular_damping = params.p_rb_rotation
 
             ## Make Track offset point
-            bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
+            bpy.ops.object.empty_add(type='ARROWS')
             tr = context.active_object
             tr.name = "tr." + ob.name + "." + selected_bone.name
             tr.empty_display_size = selected_bone.length * params.joint_size * self.tr_size
@@ -1222,7 +1202,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
                 elif params.p_rb_add_pole_rootbody:
                     ###Create Rigidbody Cube
-                    bpy.ops.mesh.primitive_cube_add(size=1, location=selected_bone.parent.center)
+                    bpy.ops.mesh.primitive_cube_add(size=1, location=ob.matrix_world @ selected_bone.matrix @ selected_bone.head)
                     rc = context.active_object
                     rc.name = "rb.pole." + ob.name + "." + selected_bone.parent.name
                     rc.rotation_mode = 'QUATERNION'
@@ -1267,7 +1247,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
                     #without ops way to childof_set_inverse
                     sub_target = bpy.data.objects[ob.name].pose.bones[selected_bone.parent.name]
                     #self.report({'INFO'}, str(sub_target))
-                    CoC.inverse_matrix = sub_target.matrix.inverted()
+                    CoC.inverse_matrix = (ob.matrix_world @ sub_target.matrix).inverted()
 
         #context.view_layer.update()
         print('Joint Session')
@@ -1278,7 +1258,7 @@ class AddActiveNJointOperator(bpy.types.Operator):
 
             if selected_bone in rb_dict:
                 ###Create Joint Empty
-                bpy.ops.object.empty_add(type='ARROWS', location=selected_bone.head)
+                bpy.ops.object.empty_add(type='ARROWS', location=ob.matrix_world @ selected_bone.matrix @ selected_bone.head)
                 jc = context.active_object
                 jc.name = "joint." + ob.name + "." + selected_bone.name
                 jc.show_in_front = True
@@ -1333,8 +1313,8 @@ class AddActiveNJointOperator(bpy.types.Operator):
                 jc.rigid_body_constraint.spring_damping_y = params.joint_spring_damping_y
                 jc.rigid_body_constraint.spring_damping_z = params.joint_spring_damping_z
         
-        ###bone's use_connect turn to false
         context.view_layer.objects.active = ob
+        ###bone's use_connect turn to false
         bpy.ops.object.mode_set(mode='EDIT')
         for selected_bone in spb:
             ob.data.edit_bones[selected_bone.name].use_connect = False
@@ -1406,8 +1386,8 @@ class ForceCorrespondNameRBAndTrackObjectOperator(bpy.types.Operator):
 
 class ConnectOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.connect"
-    bl_label = "Connect Rigidbody Constraint"
-    bl_description = "Set Rigidbody Constraints Object paratemter of selected objects active object."
+    bl_label = "Connect Rigid Body Constraint"
+    bl_description = "Set selected objects' 'Objects' paratemter of rigid body constraint to active object."
     bl_options = {'UNDO'}
     
     def execute(self, context):
@@ -1441,10 +1421,10 @@ def set_dimentions(context, params, selected_bone):
         ]
 
 
-def align_obj_to_bone(obj, rig, bone_name):
-    bone = rig.data.bones[bone_name]
+def align_obj_to_bone(obj, armature, bone_name):
+    bone = armature.data.bones[bone_name]
 
-    mat = rig.matrix_world @ bone.matrix_local
+    mat = armature.matrix_world @ bone.matrix_local
     
     obj.location = mat.to_translation()
 
@@ -1452,10 +1432,10 @@ def align_obj_to_bone(obj, rig, bone_name):
     obj.rotation_quaternion = mat.to_quaternion()
 
 
-def align_rb_to_bone(obj, rig, bone_name):
-    bone = rig.data.bones[bone_name]
+def align_rb_ort_to_bone(obj, armature, bone_name):
+    bone = armature.data.bones[bone_name]
 
-    mat = rig.matrix_world @ bone.matrix_local @ mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'X')
+    mat = armature.matrix_world @ bone.matrix_local @ mathutils.Matrix.Rotation(math.radians(-90.0), 4, 'X')
 
     obj.rotation_mode = 'QUATERNION'
     obj.rotation_quaternion = mat.to_quaternion()
