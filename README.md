@@ -25,7 +25,7 @@ Add rigid bodies and joints (Rigid Body Constraints) aligned on specified bones 
 1. Download zip file from [release page](/../../releases/latest).
 1. Install & activate this Add-on.
 1. Select some bones in "pose mode".
-1. Execute actions from Menu "Pose→Gen Rigidbodies".
+1. Execute actions from Menu "Pose → Gen Rigid Bodies".
 1. Edit parameter on properties panel.
 
 ## Functions
