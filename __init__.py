@@ -6,7 +6,7 @@ import math
 bl_info = {
     "name": "Generate rigid bodies from bone",
     "author": "SAM-tak, 12funkeys",
-    "version": (1, 0),
+    "version": (1, 0, 1),
     "blender": (2, 80, 0),
     "location": "pose > Gen Rigid Bodies",
     "description": "Set rigid bodies and constraints easily",
