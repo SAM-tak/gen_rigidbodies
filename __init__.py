@@ -402,7 +402,7 @@ class UProp:
 ### Create Rigid Bodies On Bones
 class AddPassiveOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addpassivejoint"
-    bl_label = "Add Passive"
+    bl_label = "Add Passives"
     bl_description = "Make passive rigid bodies aligned to selected bones"
     bl_options = {'REGISTER', 'UNDO'}
     
@@ -524,7 +524,7 @@ class AddPassiveOperator(bpy.types.Operator):
 #
 class AddActiveOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addactive"
-    bl_label = "Add Active"
+    bl_label = "Add Actives"
     bl_description = "Make active rigid bodies aligned to selected bones"
     bl_options = {'REGISTER', 'UNDO'}
 
@@ -867,7 +867,7 @@ class AddJointOperator(bpy.types.Operator):
 
 class AddActiveNJointOperator(bpy.types.Operator):
     bl_idname = "genrigidbodies.addactivenjoint"
-    bl_label = "Add Active & Joints"
+    bl_label = "Add Actives & Joints"
     bl_description = "Make active rigid bodies & constraints"
     bl_options = {'REGISTER', 'UNDO'}
 

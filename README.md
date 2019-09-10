@@ -31,13 +31,13 @@ Add rigid bodies and joints (Rigid Body Constraints) aligned on specified bones 
 ## Functions
 
 - *Placement : Pose mode / Pose menu → Gen Rigid Bodies*
-  - **Add Passive**  
+  - **Add Passives**  
     Craete passive rigid body objects aligned to selected bones.
-  - **Add Active**  
+  - **Add Actives**  
     Craete active rigid body objects aligned to selected bones.
   - **Add Joints**  
     Create rigid body constraint objects on selected bones only.
-  - **Add Active & Joints**  
+  - **Add Actives & Joints**  
     Craete rigid body objects and constraint objects on selected bone tree.
 - *Placement : Object mode / Object menu → Gen Rigid Bodies*
   - **Reparent Orphan Track Object**  

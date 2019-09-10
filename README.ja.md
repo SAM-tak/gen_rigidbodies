@@ -32,13 +32,13 @@
 ## 機能
 
 - *場所 : Pose mode / Pose メニュー → Gen Rigid Bodies*
-  - **Add Passive**  
+  - **Add Passives**  
     基礎剛体の作成‐ボーン追従
-  - **Add Active**  
+  - **Add Actives**  
     基礎剛体の作成‐物理演算
   - **Add Joints**  
     基礎Jointの作成
-  - **Add Active & Joints**  
+  - **Add Actives & Joints**  
     基礎剛体／連結Jointの作成
 - *場所 : Object mode / Object メニュー → Gen Rigid Bodies*
   - **Reparent Orphan Track Object**  
